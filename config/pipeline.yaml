@@ -1,0 +1,87 @@
+# AutoKernel Pipeline Configuration
+
+models:
+  planner: 'ornith:9b'
+  coder: 'qwen2.5-coder:7b'
+  embedder: 'bge-m3'
+  reviewer: 'nemotron-3-ultra'
+
+ollama:
+  host: 'http://localhost:11434'
+  keep_alive: '5m'
+  max_concurrent_models: 1
+
+nemotron:
+  api_key_vault: 'Infraestructura'
+  api_key_item: 'NVIDIA'
+  api_key_field: 'APIkey'
+  model: 'nvidia/nemotron-3-ultra'
+  temperature: 0.1
+  max_tokens: 8192
+
+rag:
+  embed_model: 'bge-m3'
+  chunk_size: 2000
+  chunk_overlap: 200
+  top_k: 5
+  index_dir: 'workspace/rag'
+
+pipeline:
+  name: 'autokernel-nightly'
+  max_duration_hours: 6
+  schedule: '0 2 * * *'
+  max_parallel_kernels: 2
+  webhook_url: 'https://ntfy.sh/autokernel-alexendros'
+
+  target_models:
+    - name: 'llama_7b'
+      path: 'models/llama_7b.py'
+      class: 'LlamaModel'
+      shape: '1,512'
+      dtype: 'float16'
+      enabled: true
+    - name: 'phi3_mini'
+      path: 'models/phi3_mini.py'
+      class: 'Phi3Mini'
+      shape: '1,2048'
+      dtype: 'float16'
+      enabled: true
+    - name: 'bert_base'
+      path: 'models/bert_base.py'
+      class: 'BertModel'
+      shape: '8,512'
+      dtype: 'float16'
+      enabled: true
+
+  phases:
+    profile:
+      timeout_min: 30
+      dtypes: ['float16']
+    extract:
+      top_k: 5
+      backend: 'triton'
+    optimize:
+      iterations_per_kernel: 5
+      timeout_per_iteration_sec: 1800
+      kernelbench_inline: true
+      models:
+        planner: 'ornith:9b'
+        coder: 'qwen2.5-coder:7b'
+        reviewer: 'nemotron-3-ultra'
+      acceptance:
+        min_speedup: 1.05
+        max_regression: 0.98
+        correctness: 0.99
+      rollback: auto
+    verify:
+      end_to_end: true
+    export:
+      format: 'standard'
+    cuda_migrate:
+      kernels: ['matmul', 'flash_attention']
+      reviewer: 'nemotron-3-ultra'
+    report:
+      formats: ['markdown', 'json', 'html']
+      html_dashboard: true
+      dashboard_dir: 'docs'
+      push_to_github: true

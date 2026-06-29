@@ -1,0 +1,15 @@
+[Unit]
+Description=AutoKernel Nightly Optimization Pipeline
+After=network.target ollama.service
+Wants=ollama.service
+
+[Service]
+Type=oneshot
+User=alexendros
+WorkingDirectory=/home/alexendros/repositorios/org-iniciativas-alexendros/autokernel
+Environment=PATH=/home/alexendros/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/alexendros/repositorios/org-iniciativas-alexendros/autokernel/scripts/nightly_pipeline.sh
+TimeoutSec=21600
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
