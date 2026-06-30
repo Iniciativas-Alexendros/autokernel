@@ -106,4 +106,4 @@ bash scripts/nightly_pipeline.sh
 
 ## Licencia
 
-Uso personal. Basado en [AutoKernel](https://github.com/RightNowAI/auto-kernel) de RightNowAI.
+[MIT](LICENSE) — Basado en [AutoKernel](https://github.com/RightNowAI/auto-kernel) de RightNowAI.
