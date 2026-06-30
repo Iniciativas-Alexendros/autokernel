@@ -22,7 +22,14 @@ def _read_proton_pass(vault: str, item: str, field: str = "password") -> str:
     uri = f"pass://{vault}/{item}/{field}"
     try:
         result = subprocess.run(
-            ["/home/alexendros/.local/bin/pass-cli", "read", uri],
+            [
+                "/home/alexendros/.local/bin/pass-cli",
+                "item",
+                "view",
+                uri,
+                "--field",
+                field,
+            ],
             capture_output=True,
             text=True,
             check=True,

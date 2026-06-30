@@ -107,8 +107,10 @@ class RAGIndex:
 
     def query(self, query_text: str, k: int = 5) -> list[Doc]:
         """Query the index for most relevant documents."""
-        if self.index is None or self.index.ntotal == 0:
+        if not HAS_FAISS or self.index is None or self.index.ntotal == 0:
             self.load()
+        if not HAS_FAISS or self.index is None or self.index.ntotal == 0:
+            return []
 
         q_embedding = self._embed([query_text])
         faiss.normalize_L2(q_embedding)
@@ -137,6 +139,8 @@ class RAGIndex:
 
     def load(self) -> bool:
         """Load index from disk. Returns False if not found."""
+        if not HAS_FAISS:
+            return False
         if not INDEX_PATH.exists() or not METADATA_PATH.exists():
             return False
         self.index = faiss.read_index(str(INDEX_PATH))
