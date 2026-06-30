@@ -32,7 +32,7 @@ traces/
 # Workspace (runtime artifacts)
 workspace/
 
-# CUDA lab build artifacts
-cuda-lab/hello
-cuda-lab/hello_final
-cuda-lab/*.cpp4.ii
+# CUDA samples build artifacts
+cuda-samples/hello
+cuda-samples/hello_final
+cuda-samples/*.cpp4.ii

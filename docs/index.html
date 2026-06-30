@@ -23,7 +23,7 @@
 <body>
   <div class="container-fluid py-4">
     <h1 class="mb-4">AutoKernel Dashboard</h1>
-    <p class="text-muted">Last updated: 2026-06-29 17:00 UTC</p>
+    <p class="text-muted">Last updated: 2026-06-30 00:13 UTC</p>
 
     <div class="row mb-4">
       <div class="col-md-3">
@@ -188,7 +188,7 @@
         <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#s-verify">Verification</button></h2>
         <div id="s-verify" class="accordion-collapse collapse" data-bs-parent="#dashboard">
           <div class="accordion-body">
-            <table class='table table-sm'><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody><tr><td>model</td><td>LlamaModel</td></tr><tr><td>input_shape</td><td>1,512</td></tr><tr><td>dtype</td><td>float16</td></tr><tr><td>gpu</td><td>NVIDIA GeForce RTX 5060 Laptop GPU</td></tr><tr><td>reference</td><td>{'output_shape': '[1, 512, 32000]', 'latency_ms': 4.78}</td></tr><tr><td>optimized</td><td>{'output_shape': '[1, 512, 32000]', 'latency_ms': 8.78, 'kernels_replaced': [{'type': 'matmul', 'rank': 1, 'speedup': 1.218, 'path': 'workspace/kernel_matmul_1_optimized.py'}, {'type': 'flash_attention', 'rank': 4, 'speedup': 1.416, 'path': 'workspace/kernel_flash_attention_4_optimized.py'}]}</td></tr><tr><td>verification</td><td>{'correctness': 'FAIL', 'max_abs_error': 0.00390625, 'mean_abs_error': 0.00035359576577320695, 'has_nan': False, 'has_inf': False}</td></tr><tr><td>summary</td><td>{'original_latency_ms': 4.78, 'optimized_latency_ms': 8.78, 'end_to_end_speedup': 0.544, 'kernels_replaced': 2}</td></tr></tbody></table>
+            <table class='table table-sm'><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody><tr><td>model</td><td>LlamaModel</td></tr><tr><td>input_shape</td><td>1,512</td></tr><tr><td>dtype</td><td>float16</td></tr><tr><td>gpu</td><td>NVIDIA GeForce RTX 5060 Laptop GPU</td></tr><tr><td>reference</td><td>{'output_shape': '[1, 512, 32000]', 'latency_ms': 4.75}</td></tr><tr><td>optimized</td><td>{'output_shape': '[1, 512, 32000]', 'latency_ms': 8.87, 'kernels_replaced': [{'type': 'matmul', 'rank': 1, 'speedup': 1.218, 'path': 'workspace/kernel_matmul_1_optimized.py'}, {'type': 'flash_attention', 'rank': 4, 'speedup': 1.418, 'path': 'workspace/kernel_flash_attention_4_optimized.py'}]}</td></tr><tr><td>verification</td><td>{'correctness': 'FAIL', 'max_abs_error': 0.00390625, 'mean_abs_error': 0.00036828246084041893, 'has_nan': False, 'has_inf': False}</td></tr><tr><td>summary</td><td>{'original_latency_ms': 4.75, 'optimized_latency_ms': 8.87, 'end_to_end_speedup': 0.536, 'kernels_replaced': 2}</td></tr></tbody></table>
           </div>
         </div>
       </div>

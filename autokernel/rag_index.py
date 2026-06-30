@@ -150,7 +150,7 @@ class RAGIndex:
 
 
 def build_default_index():
-    """Build RAG index from default sources: kernels/, specs/, PROPOSAL.md."""
+    """Build RAG index from default sources: kernels/, specs/, docs/ARCHITECTURE.md."""
     rag = RAGIndex()
 
     # Triton kernels
@@ -182,11 +182,11 @@ def build_default_index():
             rel = md_file.relative_to(SCRIPT_DIR)
             rag.add_document(text, str(rel), {"type": "spec"})
 
-    # Proposal
-    proposal = SCRIPT_DIR / "PROPOSAL.md"
+    # Architecture doc
+    proposal = SCRIPT_DIR / "docs" / "ARCHITECTURE.md"
     if proposal.exists():
         text = proposal.read_text(encoding="utf-8", errors="ignore")
-        rag.add_document(text, "PROPOSAL.md", {"type": "proposal"})
+        rag.add_document(text, "docs/ARCHITECTURE.md", {"type": "proposal"})
 
     # Existing kernels in workspace
     workspace = SCRIPT_DIR / "workspace"

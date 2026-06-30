@@ -659,7 +659,7 @@ def extract_kernels(
     print("Next steps:")
     print(f"  1. Copy a kernel to kernel.py: cp {top_file} kernel.py")
     print(f"  2. Run benchmark: uv run bench.py")
-    print(f"  3. Start optimizing (or let the agent do it via program.md)")
+    print(f"  3. Start optimizing (or let the agent do it via docs/PLAYBOOK.md)")
 
 
 # ---------------------------------------------------------------------------
