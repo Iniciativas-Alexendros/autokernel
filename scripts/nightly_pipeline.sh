@@ -88,7 +88,6 @@ for model_spec in "${MODELS[@]}"; do
     --class-name "$M_CLASS" \
     --input-shape "$M_SHAPE" \
     --dtype "$M_DTYPE" \
-    --full \
     --output "$PROFILE_DIR" 2>&1 || {
     echo "WARN: Profile failed for $M_NAME, using existing data"
   }
@@ -99,7 +98,7 @@ for model_spec in "${MODELS[@]}"; do
   uv run python extract.py \
     --top "$EXTRACT_TOP_K" \
     --backend "$EXTRACT_BACKEND" \
-    --profile "${PROFILE_DIR}/profile_report.json" 2>&1 || {
+    --report "${PROFILE_DIR}/profile_report.json" 2>&1 || {
     echo "WARN: Extract failed for $M_NAME, using existing kernels"
   }
 
@@ -138,13 +137,12 @@ for k in kernels[:5]:
     fi
 
     echo "  Optimizing: $kt"
-    timeout "$OPT_TIMEOUT"s uv run python orchestrate.py auto \
+    timeout "$OPT_TIMEOUT"s uv run python orchestrate.py --workspace "$MODEL_WS" auto \
       --kernel "$kt" \
       --llm-planner "$LLM_PLANNER" \
       --llm-coder "$LLM_CODER" \
       --iterations "$OPT_ITERATIONS" \
-      --timeout "$OPT_TIMEOUT" \
-      --workspace "$MODEL_WS" &
+      --timeout "$OPT_TIMEOUT" &
 
     running=$((running + 1))
     PIPELINE_KERNELS=$((PIPELINE_KERNELS + 1))
@@ -177,9 +175,8 @@ for k in kernels[:5]:
     if compglob -G "${MODEL_WS}/kernel_${kt}_*optimized*.py" 2>/dev/null ||
       [[ -f "${MODEL_WS}/kernel_${kt}_optimized.py" ]]; then
       echo "  Migrating $kt to CUDA..."
-      uv run python orchestrate.py migrate-cuda \
-        --kernel "$kt" \
-        --workspace "$MODEL_WS" 2>&1 || {
+      uv run python orchestrate.py --workspace "$MODEL_WS" migrate-cuda \
+        --kernel "$kt" 2>&1 || {
         echo "  WARN: CUDA migration failed for $kt"
       }
     fi
@@ -189,7 +186,7 @@ done
 # [7/8] Generate combined report + HTML dashboard
 echo ""
 echo "[7/8] Generating reports..."
-uv run python orchestrate.py report-extended --workspace workspace >"workspace/nightly_report_$(date +%Y%m%d).md" 2>&1 || true
+uv run python orchestrate.py --workspace workspace report-extended >"workspace/nightly_report_$(date +%Y%m%d).md" 2>&1 || true
 
 mkdir -p "$REPORT_DIR"
 uv run python scripts/generate_dashboard.py \
@@ -202,8 +199,8 @@ uv run python scripts/generate_dashboard.py \
 # [8/8] Git commit + push if changes
 echo ""
 echo "[8/8] Git sync..."
-if ! git diff --quiet workspace/ docs/ 2>/dev/null || [[ -n "$(git ls-files --others --exclude-standard workspace/ docs/ 2>/dev/null)" ]]; then
-  git add workspace/ docs/
+if ! git diff --quiet docs/ 2>/dev/null || [[ -n "$(git ls-files --others --exclude-standard docs/ 2>/dev/null)" ]]; then
+  git add docs/
   git commit -m "nightly: $(date +%Y%m%d) ${PIPELINE_MODELS} models, ${PIPELINE_KERNELS} kernels" || true
   git pull --rebase origin main 2>/dev/null || true
   git push origin main 2>&1 || echo "WARN: git push failed"
