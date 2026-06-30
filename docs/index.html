@@ -1,210 +1,289 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AutoKernel Dashboard</title>
+  <title>AutoKernel — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.plot.ly/plotly-2.35.0.min.js"></script>
   <style>
-    body { background: #0d1117; color: #c9d1d9; }
-    .accordion-button { background: #161b22; color: #c9d1d9; }
-    .accordion-button:not(.collapsed) { background: #1f2937; color: #58a6ff; }
-    .accordion-body { background: #161b22; }
-    .card { background: #161b22; border-color: #30363d; }
-    .table { color: #c9d1d9; }
-    code { color: #79c0ff; }
-    .badge { font-weight: 400; }
-    .stat-card { text-align: center; padding: 1.5rem; }
-    .stat-card h2 { font-size: 2.5rem; margin: 0; }
-    .stat-card p { margin: 0; color: #8b949e; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; }
+    .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: #fff; padding: 2rem 0; }
+    .header h1 { font-size: 1.75rem; font-weight: 700; margin: 0; }
+    .header p { color: #94a3b8; margin: 0.25rem 0 0; font-size: 0.9rem; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: -1.5rem; padding: 0 1rem; position: relative; z-index: 1; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
+    .stat-card .value { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .stat-card .label { font-size: 0.8rem; color: #64748b; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .section { background: #fff; border-radius: 12px; padding: 1.5rem; margin: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .section-title { font-size: 1rem; font-weight: 600; color: #1e293b; margin: 0 0 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title .icon { font-size: 1.1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { text-align: left; font-weight: 600; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem 0.75rem; border-bottom: 2px solid #e2e8f0; }
+    td { padding: 0.625rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
+    tr:hover { background: #f8fafc; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+    .footer { text-align: center; padding: 2rem; color: #94a3b8; font-size: 0.8rem; }
+    @media (max-width: 768px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .section { margin: 0.5rem; padding: 1rem; }
+    }
   </style>
 </head>
 <body>
-  <div class="container-fluid py-4">
-    <h1 class="mb-4">AutoKernel Dashboard</h1>
-    <p class="text-muted">Last updated: 2026-06-30 00:13 UTC</p>
 
-    <div class="row mb-4">
-      <div class="col-md-3">
-        <div class="card stat-card">
-          <h2 class="text-success">2</h2>
-          <p>Completed</p>
-        </div>
+  <div class="header">
+    <div class="container">
+      <h1>⚡ AutoKernel</h1>
+      <p>Pipeline nocturno de optimización de kernels GPU — RTX 5060</p>
+      <p style="color:#64748b;font-size:0.8rem">Última actualización: 30 Jun 2026, 12:43 UTC</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="value" style="color:#10b981">2</div>
+        <div class="label">Completados</div>
       </div>
-      <div class="col-md-3">
-        <div class="card stat-card">
-          <h2 class="text-warning">3</h2>
-          <p>Pending</p>
-        </div>
+      <div class="stat-card">
+        <div class="value" style="color:#f59e0b">3</div>
+        <div class="label">Pendientes</div>
       </div>
-      <div class="col-md-3">
-        <div class="card stat-card">
-          <h2 class="text-info">1.32x</h2>
-          <p>Avg Speedup</p>
-        </div>
+      <div class="stat-card">
+        <div class="value" style="color:#6366f1">1.32x</div>
+        <div class="label">Speedup Medio</div>
       </div>
-      <div class="col-md-3">
-        <div class="card stat-card">
-          <h2 class="text-light">3</h2>
-          <p>Target Models</p>
-        </div>
+      <div class="stat-card">
+        <div class="value" style="color:#1e293b">6</div>
+        <div class="label">Experimentos</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" style="color:#1e293b">282m</div>
+        <div class="label">Tiempo Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" style="color:#1e293b">0</div>
+        <div class="label">Modelos</div>
       </div>
     </div>
 
-    <div class="accordion" id="dashboard">
-      <div class="accordion-item">
-        <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#s-models">Target Models</button></h2>
-        <div id="s-models" class="accordion-collapse collapse show" data-bs-parent="#dashboard">
-          <div class="accordion-body">
-            <table class="table table-sm">
-              <thead><tr><th>Name</th><th>Class</th><th>Shape</th><th>Dtype</th></tr></thead>
-              <tbody>
-        <tr>
-          <td><code>llama_7b</code></td>
-          <td>LlamaModel</td>
-          <td>1,512</td>
-          <td>float16</td>
-        </tr>
-        <tr>
-          <td><code>phi3_mini</code></td>
-          <td>Phi3Mini</td>
-          <td>1,2048</td>
-          <td>float16</td>
-        </tr>
-        <tr>
-          <td><code>bert_base</code></td>
-          <td>BertModel</td>
-          <td>8,512</td>
-          <td>float16</td>
-        </tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="accordion-item">
-        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#s-kernels">Kernel Optimization</button></h2>
-        <div id="s-kernels" class="accordion-collapse collapse" data-bs-parent="#dashboard">
-          <div class="accordion-body">
-            <div id="speedup-chart"></div>
-            <table class="table table-sm mt-3">
-              <thead><tr><th>Status</th><th>Type</th><th>Baseline</th><th>Best</th><th>Speedup</th><th>Exps</th><th>Kept</th><th>Reverts</th><th>Time</th></tr></thead>
-              <tbody>
-        <tr>
-          <td><span class="badge bg-success">completed</span></td>
-          <td><code>matmul</code></td>
-          <td>28.0</td>
-          <td>34.1</td>
-          <td>1.218x</td>
-          <td>3</td>
-          <td>3</td>
-          <td>0</td>
-          <td>141m</td>
-        </tr>
-        <tr>
-          <td><span class="badge bg-secondary">pending</span></td>
-          <td><code>elementwise</code></td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-          <td>0</td>
-          <td>0</td>
-          <td>0</td>
-          <td>0m</td>
-        </tr>
-        <tr>
-          <td><span class="badge bg-secondary">pending</span></td>
-          <td><code>elementwise</code></td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-          <td>0</td>
-          <td>0</td>
-          <td>0</td>
-          <td>0m</td>
-        </tr>
-        <tr>
-          <td><span class="badge bg-success">completed</span></td>
-          <td><code>flash_attention</code></td>
-          <td>25.0</td>
-          <td>35.45</td>
-          <td>1.418x</td>
-          <td>3</td>
-          <td>3</td>
-          <td>0</td>
-          <td>141m</td>
-        </tr>
-        <tr>
-          <td><span class="badge bg-secondary">pending</span></td>
-          <td><code>elementwise</code></td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-          <td>0</td>
-          <td>0</td>
-          <td>0</td>
-          <td>0m</td>
-        </tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="accordion-item">
-        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#s-experiments">Experiments</button></h2>
-        <div id="s-experiments" class="accordion-collapse collapse" data-bs-parent="#dashboard">
-          <div class="accordion-body">
-      <h6 class="mt-3">kernel_matmul_1_results</h6>
-      <div class="table-responsive">
-        <table class="table table-sm table-striped">
-          <thead><tr><th>experiment</th><th>tag</th><th>kernel_type</th><th>throughput_tflops</th><th>latency_us</th><th>pct_peak</th><th>speedup_vs_pytorch</th><th>correctness</th><th>peak_vram_mb</th><th>description</th></tr></thead>
-          <tbody><tr><td><small>1</small></td><td><small>kept</small></td><td><small>matmul</small></td><td><small>32.0000</small></td><td><small>-</small></td><td><small>-</small></td><td><small>1.000</small></td><td><small>PASS</small></td><td><small>-</small></td><td><small>BLOCK_SIZE=128x128x32, GROUP_SIZE_M=8. 32 TFLOPS (96.5% cuBLAS). Edge case FP16 failures due to Blackwell tensor core rounding (not a bug).</small></td></tr><tr><td><small>2</small></td><td><small>kept</small></td><td><small>matmul</small></td><td><small>34.1000</small></td><td><small>-</small></td><td><small>-</small></td><td><small>1.218</small></td><td><small>PASS</small></td><td><small>-</small></td><td><small>BLOCK=128x128x32, GROUP=8, NUM_STAGES=3, USE_TF32=auto. 34.1 TFLOPS (164% peak). deep_k bf16/fp32 fail (K=8192 accum error)</small></td></tr><tr><td><small>3</small></td><td><small>kept</small></td><td><small>matmul</small></td><td><small>33.0000</small></td><td><small>-</small></td><td><small>-</small></td><td><small>1.218</small></td><td><small>PASS</small></td><td><small>-</small></td><td><small>Pairwise compensated summation for K>4096. 33 TFLOPS (159% peak). 28/30 PASS (deep_k precision inherent to tensor core differences).</small></td></tr></tbody>
-        </table>
-      </div>
-      <h6 class="mt-3">kernel_flash_attention_4_results</h6>
-      <div class="table-responsive">
-        <table class="table table-sm table-striped">
-          <thead><tr><th>experiment</th><th>tag</th><th>kernel_type</th><th>throughput_tflops</th><th>latency_us</th><th>pct_peak</th><th>speedup_vs_pytorch</th><th>correctness</th><th>peak_vram_mb</th><th>description</th></tr></thead>
-          <tbody><tr><td><small>1</small></td><td><small>kept</small></td><td><small>flash_attention</small></td><td><small>31.9000</small></td><td><small>-</small></td><td><small>-</small></td><td><small>1.000</small></td><td><small>PASS</small></td><td><small>-</small></td><td><small>Dynamic BLOCK_M/N sizing: D<=32→128, D<=64→64, D>64→32. Passes all 16 configs including D=128. 9.3x PyTorch.</small></td></tr><tr><td><small>2</small></td><td><small>kept</small></td><td><small>flash_attention</small></td><td><small>35.4000</small></td><td><small>-</small></td><td><small>-</small></td><td><small>1.416</small></td><td><small>PASS</small></td><td><small>-</small></td><td><small>Dynamic BLOCK_M/N: D<=32→128, D<=64→64, D>64→32. 35.4 TFLOPS (170% peak), 9.4x PyTorch. All 16 configs PASS.</small></td></tr><tr><td><small>3</small></td><td><small>kept</small></td><td><small>flash_attention</small></td><td><small>35.4500</small></td><td><small>-</small></td><td><small>-</small></td><td><small>1.418</small></td><td><small>PASS</small></td><td><small>-</small></td><td><small>exp2 Blackwell optimization. 35.45 TFLOPS (170.7% peak), 10.1x PyTorch. 16/16 PASS.</small></td></tr></tbody>
-        </table>
-      </div></div>
-        </div>
-      </div>
-
-      <div class="accordion-item">
-        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#s-profile">Profile Top Kernels</button></h2>
-        <div id="s-profile" class="accordion-collapse collapse" data-bs-parent="#dashboard">
-          <div class="accordion-body">
-            <table class="table table-sm">
-              <thead><tr><th>Kernel</th><th>% Time</th></tr></thead>
-              <tbody><tr><td><code>matmul</code></td><td>0.0%</td></tr><tr><td><code>elementwise</code></td><td>0.0%</td></tr><tr><td><code>elementwise</code></td><td>0.0%</td></tr><tr><td><code>flash_attention</code></td><td>0.0%</td></tr><tr><td><code>elementwise</code></td><td>0.0%</td></tr><tr><td><code>reduction</code></td><td>0.0%</td></tr><tr><td><code>elementwise</code></td><td>0.0%</td></tr><tr><td><code>elementwise</code></td><td>0.0%</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="accordion-item">
-        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#s-verify">Verification</button></h2>
-        <div id="s-verify" class="accordion-collapse collapse" data-bs-parent="#dashboard">
-          <div class="accordion-body">
-            <table class='table table-sm'><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody><tr><td>model</td><td>LlamaModel</td></tr><tr><td>input_shape</td><td>1,512</td></tr><tr><td>dtype</td><td>float16</td></tr><tr><td>gpu</td><td>NVIDIA GeForce RTX 5060 Laptop GPU</td></tr><tr><td>reference</td><td>{'output_shape': '[1, 512, 32000]', 'latency_ms': 4.75}</td></tr><tr><td>optimized</td><td>{'output_shape': '[1, 512, 32000]', 'latency_ms': 8.87, 'kernels_replaced': [{'type': 'matmul', 'rank': 1, 'speedup': 1.218, 'path': 'workspace/kernel_matmul_1_optimized.py'}, {'type': 'flash_attention', 'rank': 4, 'speedup': 1.418, 'path': 'workspace/kernel_flash_attention_4_optimized.py'}]}</td></tr><tr><td>verification</td><td>{'correctness': 'FAIL', 'max_abs_error': 0.00390625, 'mean_abs_error': 0.00036828246084041893, 'has_nan': False, 'has_inf': False}</td></tr><tr><td>summary</td><td>{'original_latency_ms': 4.75, 'optimized_latency_ms': 8.87, 'end_to_end_speedup': 0.536, 'kernels_replaced': 2}</td></tr></tbody></table>
-          </div>
-        </div>
-      </div>
+    <div class="section">
+      <div class="section-title"><span class="icon">📊</span> Speedup por Kernel</div>
+      <div id="speedup-chart" style="height:300px"></div>
     </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">🎯</span> Modelos Objetivo</div>
+      <table>
+        <thead><tr><th>Modelo</th><th>Clase</th><th>Shape</th><th>Dtype</th></tr></thead>
+        <tbody><tr><td colspan="4" style="color:#94a3b8;text-align:center">Sin modelos configurados</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">🔧</span> Optimización de Kernels</div>
+      <table>
+        <thead><tr><th>Estado</th><th>Tipo</th><th>Baseline</th><th>Mejor</th><th>Speedup</th><th>Exps</th><th>Conservados</th><th>Tiempo</th></tr></thead>
+        <tbody>
+        <tr>
+          <td><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:500;color:#fff;background:#10b981">completed</span></td>
+          <td><code style="color:#6366f1">matmul</code></td>
+          <td style="text-align:right">28.0</td>
+          <td style="text-align:right">34.1</td>
+          <td style="text-align:right"><span style="color:#f59e0b;font-weight:600">1.218x</span></td>
+          <td style="text-align:center">3</td>
+          <td style="text-align:center">3</td>
+          <td style="text-align:center">141m</td>
+        </tr>
+        <tr>
+          <td><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:500;color:#fff;background:#6b7280">pending</span></td>
+          <td><code style="color:#6366f1">elementwise</code></td>
+          <td style="text-align:right">—</td>
+          <td style="text-align:right">—</td>
+          <td style="text-align:right"><span style="color:#6b7280">—</span></td>
+          <td style="text-align:center">0</td>
+          <td style="text-align:center">0</td>
+          <td style="text-align:center">0m</td>
+        </tr>
+        <tr>
+          <td><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:500;color:#fff;background:#6b7280">pending</span></td>
+          <td><code style="color:#6366f1">elementwise</code></td>
+          <td style="text-align:right">—</td>
+          <td style="text-align:right">—</td>
+          <td style="text-align:right"><span style="color:#6b7280">—</span></td>
+          <td style="text-align:center">0</td>
+          <td style="text-align:center">0</td>
+          <td style="text-align:center">0m</td>
+        </tr>
+        <tr>
+          <td><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:500;color:#fff;background:#10b981">completed</span></td>
+          <td><code style="color:#6366f1">flash_attention</code></td>
+          <td style="text-align:right">25.0</td>
+          <td style="text-align:right">35.45</td>
+          <td style="text-align:right"><span style="color:#f59e0b;font-weight:600">1.418x</span></td>
+          <td style="text-align:center">3</td>
+          <td style="text-align:center">3</td>
+          <td style="text-align:center">141m</td>
+        </tr>
+        <tr>
+          <td><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:500;color:#fff;background:#6b7280">pending</span></td>
+          <td><code style="color:#6366f1">elementwise</code></td>
+          <td style="text-align:right">—</td>
+          <td style="text-align:right">—</td>
+          <td style="text-align:right"><span style="color:#6b7280">—</span></td>
+          <td style="text-align:center">0</td>
+          <td style="text-align:center">0</td>
+          <td style="text-align:center">0m</td>
+        </tr></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">🧪</span> Perfil — Top Kernels</div>
+      <table>
+        <thead><tr><th>Kernel</th><th>Distribución</th><th style="text-align:right">% Tiempo</th></tr></thead>
+        <tbody>
+            <tr>
+              <td><code style="color:#6366f1">matmul</code></td>
+              <td style="width:60%">
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%">
+                  <div style="background:#6366f1;border-radius:4px;height:8px;width:0%"></div>
+                </div>
+              </td>
+              <td style="text-align:right;font-weight:500">0.0%</td>
+            </tr>
+            <tr>
+              <td><code style="color:#6366f1">elementwise</code></td>
+              <td style="width:60%">
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%">
+                  <div style="background:#6366f1;border-radius:4px;height:8px;width:0%"></div>
+                </div>
+              </td>
+              <td style="text-align:right;font-weight:500">0.0%</td>
+            </tr>
+            <tr>
+              <td><code style="color:#6366f1">elementwise</code></td>
+              <td style="width:60%">
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%">
+                  <div style="background:#6366f1;border-radius:4px;height:8px;width:0%"></div>
+                </div>
+              </td>
+              <td style="text-align:right;font-weight:500">0.0%</td>
+            </tr>
+            <tr>
+              <td><code style="color:#6366f1">flash_attention</code></td>
+              <td style="width:60%">
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%">
+                  <div style="background:#6366f1;border-radius:4px;height:8px;width:0%"></div>
+                </div>
+              </td>
+              <td style="text-align:right;font-weight:500">0.0%</td>
+            </tr>
+            <tr>
+              <td><code style="color:#6366f1">elementwise</code></td>
+              <td style="width:60%">
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%">
+                  <div style="background:#6366f1;border-radius:4px;height:8px;width:0%"></div>
+                </div>
+              </td>
+              <td style="text-align:right;font-weight:500">0.0%</td>
+            </tr>
+            <tr>
+              <td><code style="color:#6366f1">reduction</code></td>
+              <td style="width:60%">
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%">
+                  <div style="background:#6366f1;border-radius:4px;height:8px;width:0%"></div>
+                </div>
+              </td>
+              <td style="text-align:right;font-weight:500">0.0%</td>
+            </tr>
+            <tr>
+              <td><code style="color:#6366f1">elementwise</code></td>
+              <td style="width:60%">
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%">
+                  <div style="background:#6366f1;border-radius:4px;height:8px;width:0%"></div>
+                </div>
+              </td>
+              <td style="text-align:right;font-weight:500">0.0%</td>
+            </tr>
+            <tr>
+              <td><code style="color:#6366f1">elementwise</code></td>
+              <td style="width:60%">
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100%">
+                  <div style="background:#6366f1;border-radius:4px;height:8px;width:0%"></div>
+                </div>
+              </td>
+              <td style="text-align:right;font-weight:500">0.0%</td>
+            </tr></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">✅</span> Verificación End-to-End</div>
+      <table>
+        <thead><tr><th>Check</th><th>Resultado</th></tr></thead>
+        <tbody><tr><td>model</td><td>— LlamaModel</td></tr><tr><td>input_shape</td><td>— 1,512</td></tr><tr><td>dtype</td><td>— float16</td></tr><tr><td>gpu</td><td>— NVIDIA GeForce RTX 5060 Laptop GPU</td></tr><tr><td>reference</td><td>— {'output_shape': '[1, 512, 32000]', 'latency_ms': 4.75}</td></tr><tr><td>optimized</td><td>— {'output_shape': '[1, 512, 32000]', 'latency_ms': 8.87, 'kernels_replaced': [{'type': 'matmul', 'rank': 1, 'speedup': 1.218, 'path': 'workspace/kernel_matmul_1_optimized.py'}, {'type': 'flash_attention', 'rank': 4, 'speedup': 1.418, 'path': 'workspace/kernel_flash_attention_4_optimized.py'}]}</td></tr><tr><td>verification</td><td>— {'correctness': 'FAIL', 'max_abs_error': 0.00390625, 'mean_abs_error': 0.00036828246084041893, 'has_nan': False, 'has_inf': False}</td></tr><tr><td>summary</td><td>— {'original_latency_ms': 4.75, 'optimized_latency_ms': 8.87, 'end_to_end_speedup': 0.536, 'kernels_replaced': 2}</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">📋</span> Experimentos</div>
+      
+        <h6 style="margin-top:1.5rem;color:#374151;font-weight:600">kernel_matmul_1_results</h6>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+            <thead><tr style="border-bottom:2px solid #e5e7eb"><th>experiment</th><th>tag</th><th>kernel_type</th><th>throughput_tflops</th><th>latency_us</th><th>pct_peak</th><th>speedup_vs_pytorch</th><th>correctness</th><th>peak_vram_mb</th><th>description</th></tr></thead>
+            <tbody><tr><td>1</td><td>kept</td><td>matmul</td><td>32.0000</td><td>—</td><td>—</td><td>1.000</td><td>PASS</td><td>—</td><td>BLOCK_SIZE=128x128x32, GROUP_SIZE_M=8. 32 TFLOPS (96.5% cuBLAS). Edge case FP16 failures due to Blackwell tensor core rounding (not a bug).</td></tr><tr><td>2</td><td>kept</td><td>matmul</td><td>34.1000</td><td>—</td><td>—</td><td>1.218</td><td>PASS</td><td>—</td><td>BLOCK=128x128x32, GROUP=8, NUM_STAGES=3, USE_TF32=auto. 34.1 TFLOPS (164% peak). deep_k bf16/fp32 fail (K=8192 accum error)</td></tr><tr><td>3</td><td>kept</td><td>matmul</td><td>33.0000</td><td>—</td><td>—</td><td>1.218</td><td>PASS</td><td>—</td><td>Pairwise compensated summation for K>4096. 33 TFLOPS (159% peak). 28/30 PASS (deep_k precision inherent to tensor core differences).</td></tr></tbody>
+          </table>
+        </div>
+        <h6 style="margin-top:1.5rem;color:#374151;font-weight:600">kernel_flash_attention_4_results</h6>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+            <thead><tr style="border-bottom:2px solid #e5e7eb"><th>experiment</th><th>tag</th><th>kernel_type</th><th>throughput_tflops</th><th>latency_us</th><th>pct_peak</th><th>speedup_vs_pytorch</th><th>correctness</th><th>peak_vram_mb</th><th>description</th></tr></thead>
+            <tbody><tr><td>1</td><td>kept</td><td>flash_attention</td><td>31.9000</td><td>—</td><td>—</td><td>1.000</td><td>PASS</td><td>—</td><td>Dynamic BLOCK_M/N sizing: D<=32→128, D<=64→64, D>64→32. Passes all 16 configs including D=128. 9.3x PyTorch.</td></tr><tr><td>2</td><td>kept</td><td>flash_attention</td><td>35.4000</td><td>—</td><td>—</td><td>1.416</td><td>PASS</td><td>—</td><td>Dynamic BLOCK_M/N: D<=32→128, D<=64→64, D>64→32. 35.4 TFLOPS (170% peak), 9.4x PyTorch. All 16 configs PASS.</td></tr><tr><td>3</td><td>kept</td><td>flash_attention</td><td>35.4500</td><td>—</td><td>—</td><td>1.418</td><td>PASS</td><td>—</td><td>exp2 Blackwell optimization. 35.45 TFLOPS (170.7% peak), 10.1x PyTorch. 16/16 PASS.</td></tr></tbody>
+          </table>
+        </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    AutoKernel — Pipeline nocturno de optimización de kernels GPU<br>
+    <a href="https://github.com/Iniciativas-Alexendros/autokernel" style="color:#6366f1;text-decoration:none">GitHub</a> ·
+    <a href="https://iniciativas-alexendros.github.io/autokernel/" style="color:#6366f1;text-decoration:none">Dashboard</a>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    Plotly.newPlot('speedup-chart', [{"x": ["matmul", "elementwise", "elementwise", "flash_attention", "elementwise"], "y": [1.218, 0, 0, 1.418, 0], "type": "bar", "marker": {"color": ["#198754", "#6c757d", "#6c757d", "#198754", "#6c757d"]}}], {
-      title: 'Speedup by Kernel',
-      paper_bgcolor: '#161b22',
-      plot_bgcolor: '#0d1117',
-      font: { color: '#c9d1d9' },
-      xaxis: { title: 'Kernel' },
-      yaxis: { title: 'Speedup (x)', rangemode: 'tozero' }
-    }, {responsive: true});
+    const kernels = ["matmul", "elementwise", "elementwise", "flash_attention", "elementwise"];
+    const speedups = [1.218, 0, 0, 1.418, 0];
+    const colors = ["#10b981", "#d1d5db", "#d1d5db", "#10b981", "#d1d5db"];
+
+    if (kernels.length > 0) {
+      Plotly.newPlot('speedup-chart', [{
+        x: kernels,
+        y: speedups,
+        type: 'bar',
+        marker: { color: colors, cornerradius: 6 },
+        text: speedups.map(s => s > 0 ? s.toFixed(2) + 'x' : ''),
+        textposition: 'outside',
+        textfont: { size: 12, color: '#64748b' }
+      }], {
+        margin: { t: 10, b: 40, l: 50, r: 20 },
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        font: { family: 'Inter, sans-serif', color: '#64748b' },
+        xaxis: { gridcolor: '#f1f5f9', tickfont: { size: 11 } },
+        yaxis: { title: 'Speedup (x)', gridcolor: '#f1f5f9', rangemode: 'tozero', tickfont: { size: 11 } },
+        bargap: 0.3
+      }, { responsive: true, displayModeBar: false });
+    } else {
+      document.getElementById('speedup-chart').innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem">Sin datos de kernels</p>';
+    }
   </script>
+
 </body>
 </html>
