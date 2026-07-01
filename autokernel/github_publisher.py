@@ -38,10 +38,22 @@ class PublishResult:
 class GitHubPublisher:
     """Publish optimized kernels to GitHub via `gh` CLI."""
 
-    def __init__(self, repo_dir: Path | None = None, default_branch: str = "main"):
+    def __init__(self, repo_dir: Path | None = None, default_branch: str | None = None):
         self.repo_dir = (repo_dir or REPO_ROOT).resolve()
-        self.default_branch = default_branch
+        self.default_branch = default_branch or self._detect_default_branch()
         self._ensure_gh()
+        self._ensure_git_auth()
+
+    def _detect_default_branch(self) -> str:
+        rc, out, _ = self._run(["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
+        if rc == 0 and out:
+            return out.strip().split("/")[-1]
+        return "main"
+
+    def _ensure_git_auth(self) -> None:
+        rc, _, _ = self._run(["gh", "auth", "status"])
+        if rc != 0:
+            raise RuntimeError("gh CLI no está autenticado")
 
     def _ensure_gh(self) -> None:
         gh = _resolve_bin("gh", "/usr/bin/gh")

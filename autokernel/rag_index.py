@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -46,14 +47,18 @@ class RAGIndex:
         self.docs: list[Doc] = []
         self.dim = 1024  # bge-m3 output dimension
 
-    def _embed(self, texts: list[str]) -> np.ndarray:
-        """Embed texts using Ollama bge-m3."""
+    def _embed(self, texts: list[str], max_workers: int = 4) -> np.ndarray:
+        """Embed texts in parallel using Ollama bge-m3."""
         if not HAS_OLLAMA:
             raise RuntimeError("ollama package not installed. Run: uv add ollama")
-        vectors = []
-        for text in texts:
-            resp = ollama_client.embeddings(model=self.embed_model, prompt=text)
-            vectors.append(resp["embedding"])
+        if not texts:
+            return np.zeros((0, self.dim), dtype=np.float32)
+
+        def _fetch(text: str) -> list[float]:
+            return ollama_client.embeddings(model=self.embed_model, prompt=text)["embedding"]
+
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            vectors = list(pool.map(_fetch, texts))
         return np.array(vectors, dtype=np.float32)
 
     def _chunk_text(self, text: str, max_chars: int = 2000, overlap: int = 200) -> list[str]:
