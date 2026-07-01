@@ -1,6 +1,7 @@
 import importlib.util
 import os
 import sys
+from unittest import mock
 
 
 REPO_ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -45,3 +46,13 @@ class TestSelfAudit:
         verified, failed = mod.count_verified_kernels()
         assert verified == 1
         assert failed == 1
+
+    def test_main_writes_report(self, tmp_path, capsys):
+        mod = _load_self_audit_module()
+        mod.REPO_ROOT = tmp_path
+        out = tmp_path / "docs" / "EVOLUTION.md"
+        with mock.patch("sys.argv", ["self_audit", "--output", str(out)]):
+            mod.main()
+        captured = capsys.readouterr()
+        assert out.exists()
+        assert "Self-audit report written" in captured.out

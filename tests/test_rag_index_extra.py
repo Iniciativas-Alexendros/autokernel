@@ -22,6 +22,7 @@ class TestRAGIndexExtra:
         rag.DOCS_DIR = tmp_path / "docs"
         yield rag
 
+    @pytest.mark.slow
     def test_save_and_load(self, rag):
         fake_embedding = np.ones((1, 1024), dtype=np.float32)
         with mock.patch("autokernel.rag_index.ollama_client") as fake_ollama:
@@ -31,6 +32,9 @@ class TestRAGIndexExtra:
             with (
                 mock.patch("autokernel.rag_index.HAS_FAISS", True),
                 mock.patch("autokernel.rag_index.faiss") as fake_faiss,
+                mock.patch("autokernel.rag_index.INDEX_PATH", rag.INDEX_PATH),
+                mock.patch("autokernel.rag_index.METADATA_PATH", rag.METADATA_PATH),
+                mock.patch("autokernel.rag_index.INDEX_DIR", rag.INDEX_DIR),
             ):
                 fake_index = mock.Mock()
                 fake_index.search = mock.Mock(return_value=(np.array([[1.0]]), np.array([[0]])))
