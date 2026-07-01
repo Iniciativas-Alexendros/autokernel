@@ -1,6 +1,8 @@
 import json
 import os
 
+import pytest
+
 WORKSPACE = os.path.join(os.path.dirname(__file__), "..", "workspace")
 REPORT_PATH = os.path.join(WORKSPACE, "profile_report.json")
 PLAN_PATH = os.path.join(WORKSPACE, "optimization_plan.json")
@@ -13,6 +15,7 @@ def _load_json(path: str) -> dict:
         return json.load(f)
 
 
+@pytest.mark.slow
 class TestProfileReport:
     """Tests de carga y validación del profile report."""
 
@@ -44,6 +47,7 @@ class TestProfileReport:
         assert times == sorted(times, reverse=True)
 
 
+@pytest.mark.slow
 class TestOptimizationPlan:
     """Tests del plan de optimización generado por extract.py."""
 
@@ -75,6 +79,7 @@ class TestOptimizationPlan:
             assert op in valid_types, f"Tipo inválido: {op}"
 
 
+@pytest.mark.slow
 class TestKernelFiles:
     """Tests de archivos de kernel generados."""
 

@@ -182,9 +182,15 @@ class LLMAssistant:
     ):
         self.planner_model = planner_model
         self.coder_model = coder_model
-        self.nemotron = NemotronClient()
+        self._nemotron: NemotronClient | None = None
         self.rag = RAGIndex(embed_model)
         self._current_model: str | None = None
+
+    @property
+    def nemotron(self) -> NemotronClient:
+        if self._nemotron is None:
+            self._nemotron = NemotronClient()
+        return self._nemotron
 
     def _read_openrouter_key(self) -> str:
         """Read OpenRouter API key from env or Proton Pass."""

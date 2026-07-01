@@ -18,6 +18,9 @@ class TestGitHubPublisher:
 
         # Patch _ensure_gh to avoid needing gh CLI
         publisher._ensure_gh = lambda: None
+        publisher._ensure_git_auth = lambda: None
+        publisher._detect_default_branch = lambda: "main"
+        publisher.default_branch = "main"
 
         kernel_path = tmp_path / "kernel_matmul_optimized.py"
         kernel_path.write_text("KERNEL_TYPE = 'matmul'\n")
@@ -37,6 +40,9 @@ class TestGitHubPublisher:
 
         publisher = GitHubPublisher(repo_dir=tmp_path)
         publisher._ensure_gh = lambda: None
+        publisher._ensure_git_auth = lambda: None
+        publisher._detect_default_branch = lambda: "main"
+        publisher.default_branch = "main"
 
         kernel_path = tmp_path / "kernel_matmul_optimized.py"
         kernel_path.write_text("KERNEL_TYPE = 'matmul'\n")
@@ -56,6 +62,9 @@ class TestGitHubPublisher:
 
         publisher = GitHubPublisher(repo_dir=tmp_path)
         publisher._ensure_gh = lambda: None
+        publisher._ensure_git_auth = lambda: None
+        publisher._detect_default_branch = lambda: "main"
+        publisher.default_branch = "main"
 
         kernel_path = tmp_path / "kernel_matmul_optimized.py"
         kernel_path.write_text("KERNEL_TYPE = 'matmul'\n")
