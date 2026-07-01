@@ -6,6 +6,8 @@
 - **GitHub**: `https://github.com/Iniciativas-Alexendros/autokernel`
 - **Propósito**: Evolución autónoma de kernels GPU para el stack propio de Alexendros.
 - **Hardware**: NVIDIA RTX 5060 Laptop (SM 12.0, 8 GB VRAM), CUDA 13.1, GCC 15.2.0.
+- **CI actual**: lint (`ruff`), tests (`pytest` ≥70% cobertura), seguridad (`bandit`, `gitleaks`) en verde en cada push a `main`.
+- **Dashboard**: GitHub Pages en `https://iniciativas-alexendros.github.io/autokernel/`
 
 ## Comandos operativos
 
@@ -19,7 +21,9 @@
 | `uv run python profile.py --model <path> --class-name <Name> --input-shape <shape>` | Profilear modelo |
 | `uv run python verify.py --model <path> --class-name <Name> --input-shape <shape>` | Verificación end-to-end |
 | `bash scripts/nightly_pipeline.sh` | Pipeline nocturno manual |
+| `uv run python scripts/continuous_pipeline.py --config config/pipeline.yaml` | Pipeline continuo |
 | `uv run python scripts/generate_dashboard.py --workspace workspace --config config/pipeline.yaml --output docs/index.html` | Generar dashboard |
+| `uv run python scripts/self_audit.py --output docs/EVOLUTION.md` | Auditoría de salud |
 | `uv run pytest -m "not slow" -q --cov=autokernel --cov=scripts --cov-fail-under=70` | Tests con cobertura mínima 70% |
 | `uv run pytest` | Todos los tests (incluye GPU) |
 | `uv run ruff check . && uv run ruff format --check .` | Lint y formato |
@@ -33,6 +37,7 @@
 - No modificar `bench.py`, `reference.py`, `prepare.py`, `verify.py` salvo bug crítico con spec y test.
 - No introducir dependencias sin justificar en `pyproject.toml`.
 - No comments añadidos salvo petición explícita.
+- Seguir el code style del archivo que se edita; formatear con `ruff` antes de commit.
 
 ## Modelos LLM
 
@@ -80,6 +85,6 @@ El fallback a `opencode/*` requiere `OPENROUTER_API_KEY` o token configurado en 
 | 1 | Venderizar Bootstrap/Plotly/Inter y añadir SRI | Seguridad, offline | Medio | Descargar assets y generar hashes sha384 en CI. |
 | 2 | Hardening de URLs y añadir HSTS preload | Seguridad | Bajo | Audit redirects DNS y enviar dominio a hstspreload.org. |
 | 3 | Test suite de GPU reales (pytest slow) | Fiabilidad | Alto | Job CI auto-hospedado con runner que tenga RTX 5060. |
-| 4 | Alertas/métricas Prometheus + Grafana | Observabilidad | Medio | Exponer /metrics en continuous_pipeline y scrapear. |
+| 4 | Métricas Prometheus + Grafana | Observabilidad | Medio | Exponer /metrics en continuous_pipeline y scrapear. |
 | 5 | Multi-GPU scheduling y cola prioritaria | Escalabilidad | Alto | Refactor ResourceSemaphore con semáforos por GPU. |
 | 6 | Auto-rollback de kernels con regresión | Robustez | Medio | Comparar verification_*.json y restaurar baseline. |

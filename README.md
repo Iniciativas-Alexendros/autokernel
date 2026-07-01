@@ -1,13 +1,14 @@
 # AutoKernel — RTX 5060
 
 [![Release](https://img.shields.io/github/v/release/Iniciativas-Alexendros/autokernel?style=flat-square&color=blue)](https://github.com/Iniciativas-Alexendros/autokernel/releases)
+[![CI](https://github.com/Iniciativas-Alexendros/autokernel/actions/workflows/ci.yml/badge.svg)](https://github.com/Iniciativas-Alexendros/autokernel/actions/workflows/ci.yml)
 [![Pipeline](https://img.shields.io/badge/pipeline-nocturno-2%3A00--8%3A00-ff6b35?style=flat-square)](https://iniciativas-alexendros.github.io/autokernel/)
 [![Dashboard](https://img.shields.io/badge/dashboard-GitHub%20Pages-2ea44f?style=flat-square)](https://iniciativas-alexendros.github.io/autokernel/)
 [![Python](https://img.shields.io/badge/python-3.10+-3776ab?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Triton](https://img.shields.io/badge/triton-latest-ff6b35?style=flat-square)](https://triton-lang.org/)
 [![CUDA](https://img.shields.io/badge/cuda-13.1-76b900?style=flat-square&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
 
-Pipeline nocturno de optimización de kernels GPU con Ollama + Nemotron en RTX 5060.
+Pipeline de optimización autónoma de kernels GPU para el stack propio de Alexendros. Perfilado, extracción de cuellos de botella, generación de kernels Triton/CUDA y verificación end-to-end orquestados por LLM local y Nemotron como reviewer.
 
 ## Hardware
 
@@ -26,43 +27,64 @@ Pipeline nocturno de optimización de kernels GPU con Ollama + Nemotron en RTX 5
 | Phi-3 Mini         | 1,1 B  | 2,30 GB | `models/phi3_mini.py` |
 | BERT Base          | 109 M  | 0,28 GB | `models/bert_base.py` |
 
-## Pipeline nocturno
+## Pipeline
 
-| Parámetro    | Valor                                                                |
-| ------------ | -------------------------------------------------------------------- |
-| Horario      | 2:00–8:00 AM (6 h)                                                   |
-| Timer        | systemd (`autokernel-nightly.timer`)                                 |
-| Planner LLM  | ornith:9b                                                            |
-| Coder LLM    | qwen2.5-coder:7b                                                     |
-| Reviewer LLM | nemotron-3-ultra (API)                                               |
-| Webhook      | ntfy.sh/autokernel-alexendros                                        |
-| Dashboard    | [GitHub Pages](https://iniciativas-alexendros.github.io/autokernel/) |
+| Parámetro    | Valor                                                                 |
+| ------------ | --------------------------------------------------------------------- |
+| Horario      | 2:00–8:00 AM (6 h)                                                    |
+| Timer        | systemd (`autokernel-nightly.timer`)                                  |
+| Planner LLM  | `ornith:9b` (Ollama) / `opencode/mimo-v2.5-free` (fallback)             |
+| Coder LLM    | `qwen2.5-coder:7b` (Ollama) / `opencode/deepseek-v4-flash-free` (fallback) |
+| Reviewer LLM | `nvidia/nemotron-3-ultra` (NVIDIA API) / `opencode/nemotron-3-ultra-free` (fallback) |
+| Webhook      | ntfy.sh/autokernel-alexendros                                         |
+| Dashboard    | [GitHub Pages](https://iniciativas-alexendros.github.io/autokernel/)    |
+| CI           | lint + tests (≥70% cobertura) + bandit/gitleaks en cada push a `main` |
 
-## Kerneles optimizados
+## Kernels optimizados
 
 | Kernel          | Speedup | Status  |
 | --------------- | ------- | ------- |
-| matmul          | 1,218×  | ✅ PASS |
-| flash_attention | 1,418×  | ✅ PASS |
-| elementwise     | 1,74×   | ✅ PASS |
-| softmax         | 1,79×   | ✅ PASS |
-| rmsnorm         | 3,84×   | ✅ PASS |
-| fused_mlp       | 1,10×   | ✅ PASS |
+| matmul          | 1,218×  | PASS |
+| flash_attention | 1,418×  | PASS |
+| elementwise     | 1,74×   | PASS |
+| softmax         | 1,79×   | PASS |
+| rmsnorm         | 3,84×   | PASS |
+| fused_mlp       | 1,10×   | PASS |
 
 ## Comandos rápidos
 
 ```bash
-# Ver estado de optimización
-uv run python orchestrate.py --workspace workspace status
+# Estado del pipeline
+uv run orchestrate.py --workspace workspace status
+
+# Siguiente decisión del orquestador
+uv run orchestrate.py --workspace workspace next
+
+# Plan de optimización con Amdahl
+uv run orchestrate.py --workspace workspace plan
+
+# Optimizar un kernel con LLM
+uv run orchestrate.py --workspace workspace auto --kernel matmul
+
+# Migrar Triton a CUDA C++
+uv run orchestrate.py --workspace workspace migrate-cuda --kernel flash_attention
 
 # Verificar modelo end-to-end
-uv run python verify.py --model models/llama_7b.py --class-name LlamaModel --input-shape 1,512
+uv run verify.py --model models/llama_7b.py --class-name LlamaModel --input-shape 1,512
 
 # Generar dashboard HTML
 uv run python scripts/generate_dashboard.py --workspace workspace --config config/pipeline.yaml --output docs/index.html
 
 # Ejecutar pipeline manual
 bash scripts/nightly_pipeline.sh
+
+# Tests con cobertura
+uv run pytest -m "not slow" -q --cov=autokernel --cov=scripts --cov-fail-under=70
+
+# Lint + seguridad
+uv run ruff check . && uv run ruff format --check .
+uv run bandit -r autokernel scripts -ll
+gitleaks detect --source .
 ```
 
 ## Estructura del proyecto
@@ -71,11 +93,10 @@ bash scripts/nightly_pipeline.sh
 ├── config/pipeline.yaml          # Configuración del pipeline
 ├── scripts/
 │   ├── nightly_pipeline.sh       # Script principal nocturno
-│   └── generate_dashboard.py     # Generador de dashboard HTML
+│   ├── generate_dashboard.py     # Generador de dashboard HTML
+│   ├── continuous_pipeline.py    # Pipeline continuo
+│   └── self_audit.py             # Auditoría de salud del repo
 ├── models/                       # Modelos PyTorch
-│   ├── llama_7b.py
-│   ├── phi3_mini.py
-│   └── bert_base.py
 ├── kernels/                      # Kernels Triton optimizados
 │   └── cuda/                     # Kernels CUDA optimizados
 ├── autokernel/                   # Integración LLM
@@ -89,20 +110,28 @@ bash scripts/nightly_pipeline.sh
 ├── extract.py                    # Extracción de kernels
 ├── profile.py                    # Perfilado de modelos
 ├── bench.py                      # Benchmark de kernels
-├── specs/                        # Especificaciones
-├── tests/                        # Suite de tests
+├── tests/                        # Suite de tests (≥70% cobertura)
 ├── systemd/                      # Servicios systemd
 ├── docs/                         # Dashboard + documentación
-└── cuda-samples/                 # Muestras CUDA de referencia
+└── specs/                        # Especificaciones de features
 ```
+
+## Calidad y seguridad
+
+- **Lint**: `ruff` en cada push.
+- **Tests**: `pytest` con cobertura mínima del 70%.
+- **Seguridad**: `bandit` y `gitleaks` en cada push.
+- **Servicios**: `systemd-analyze verify` para `systemd/*.service` y `*.timer`.
+- **Secretos**: solo vía variables de entorno o `pass-cli`; nunca hardcodeados.
 
 ## Requisitos
 
 - Python 3.10+
 - [uv](https://docs.astral.sh/uv/)
-- Ollama con modelos: ornith:9b, qwen2.5-coder:7b, phi3:mini
+- Ollama con modelos: `ornith:9b`, `qwen2.5-coder:7b`, `bge-m3`
 - NVIDIA GPU con soporte CUDA
-- pass-cli (para secretos Proton Pass)
+- `pass-cli` (para secretos Proton Pass)
+- `zsh` (para `scripts/nightly_pipeline.sh`)
 
 ## Licencia
 

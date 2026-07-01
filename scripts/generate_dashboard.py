@@ -3,7 +3,6 @@
 
 import json
 import logging
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -408,8 +407,8 @@ def main() -> None:
     output = Path(args.output)
 
     if not workspace.exists():
-        print(f"ERROR: workspace not found: {workspace}", file=sys.stderr)
-        sys.exit(1)
+        logger.warning("workspace not found: %s; generating empty dashboard", workspace)
+        workspace.mkdir(parents=True, exist_ok=True)
 
     generate_dashboard(workspace, config, output)
 
