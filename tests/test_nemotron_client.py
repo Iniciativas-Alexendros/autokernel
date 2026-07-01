@@ -1,10 +1,11 @@
 import subprocess
+import os
 import sys
 from unittest import mock
 
 import pytest
 
-sys.path.insert(0, "/home/alexendros/repositorios/org-iniciativas-alexendros/autokernel")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from autokernel.nemotron_client import NemotronClient, ReviewResult, _read_proton_pass
 

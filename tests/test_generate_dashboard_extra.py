@@ -1,8 +1,9 @@
 import json
+import os
 import sys
 
 
-sys.path.insert(0, "/home/alexendros/repositorios/org-iniciativas-alexendros/autokernel")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from scripts.generate_dashboard import _load_results, _load_state, _load_verify
 
