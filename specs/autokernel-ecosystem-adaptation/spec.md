@@ -73,6 +73,17 @@ Transformar el repositorio `autokernel` en una herramienta de mejora y evolució
 - Mantener compatibilidad con RTX 5060 (SM 12.0) y CUDA 13.1.
 - Respetar el code style existente (sin comentarios añadidos salvo petición).
 
+## Estado de implementación
+
+| Fase | Estado | Commit | Verificación |
+| ---- | ------ | ------ | ------------ |
+| 0. Saneamiento y unificación | Completada | (varios) | Clon duplicado eliminado; AGENTS.md global actualizado. |
+| 1. Hardening y correcciones | Completada | c82341f | 49 tests no lentos pasan; systemd units verificados. |
+| 2. Ecosistema de agentes | Completada | c82341f | `.devin/autokernel/AGENTS.md` activo; soporte `opencode/*` en LLM router. |
+| 3. Pipeline continuo 24×7 | Completada | 54a6ff8 | `scripts/continuous_pipeline.py` + systemd service + tests. |
+| 4. Auto-PR y gobierno | Completada | 847c51d | `autokernel/github_publisher.py` + `orchestrate.py publish` + tests. |
+| 5. Meta-evolución | Completada | 7080be4 | `scripts/self_audit.py` genera `docs/EVOLUTION.md` + tests. |
+
 ## Fuera de alcance
 
 - Cambiar el hardware objetivo.
