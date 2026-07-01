@@ -50,11 +50,15 @@
 </head>
 <body>
 
-  <div class="header">
+  <div class="header" role="banner">
     <div class="container">
-      <h1>⚡ AutoKernel</h1>
+      <h1><span aria-hidden="true">⚡</span> AutoKernel</h1>
       <p>Pipeline nocturno de optimización de kernels GPU — RTX 5060</p>
-      <p style="color:#64748b;font-size:0.8rem">Última actualización: 01 Jul 2026, 17:37 UTC</p>
+      <p style="color:#64748b;font-size:0.8rem">Última actualización: 01 Jul 2026, 17:48 UTC</p>
+      <div style="margin-top:1rem">
+        <button id="copy-url" aria-label="Copiar enlace del dashboard" style="background:#334155;color:#fff;border:0;padding:0.5rem 1rem;border-radius:6px;cursor:pointer">Copiar enlace</button>
+        <button id="download-report" aria-label="Descargar resumen JSON" style="background:#334155;color:#fff;border:0;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;margin-left:0.5rem">Descargar JSON</button>
+      </div>
     </div>
   </div>
 
@@ -86,13 +90,13 @@
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">📊</span> Speedup por Kernel</div>
-      <div id="speedup-chart" style="height:300px"></div>
+    <div class="section" role="region" aria-label="Speedup por kernel">
+      <div class="section-title"><span class="icon" aria-hidden="true">📊</span> Speedup por Kernel</div>
+      <div id="speedup-chart" style="height:300px" role="img" aria-label="Gráfico de speedup por kernel"></div>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">🎯</span> Modelos Objetivo</div>
+    <div class="section" role="region" aria-label="Modelos objetivo">
+      <div class="section-title"><span class="icon" aria-hidden="true">🎯</span> Modelos Objetivo</div>
       <table>
         <thead><tr><th>Modelo</th><th>Clase</th><th>Shape</th><th>Dtype</th></tr></thead>
         <tbody>
@@ -117,8 +121,8 @@
       </table>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">🔧</span> Optimización de Kernels</div>
+    <div class="section" role="region" aria-label="Optimización de kernels">
+      <div class="section-title"><span class="icon" aria-hidden="true">🔧</span> Optimización de Kernels</div>
       <table>
         <thead><tr><th>Estado</th><th>Tipo</th><th>Baseline</th><th>Mejor</th><th>Speedup</th><th>Exps</th><th>Conservados</th><th>Tiempo</th></tr></thead>
         <tbody>
@@ -175,8 +179,8 @@
       </table>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">🧪</span> Perfil — Top Kernels</div>
+    <div class="section" role="region" aria-label="Perfil top kernels">
+      <div class="section-title"><span class="icon" aria-hidden="true">🧪</span> Perfil — Top Kernels</div>
       <table>
         <thead><tr><th>Kernel</th><th>Distribución</th><th style="text-align:right">% Tiempo</th></tr></thead>
         <tbody>
@@ -255,16 +259,16 @@
       </table>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">✅</span> Verificación End-to-End</div>
+    <div class="section" role="region" aria-label="Verificación end to end">
+      <div class="section-title"><span class="icon" aria-hidden="true">✅</span> Verificación End-to-End</div>
       <table>
         <thead><tr><th>Check</th><th>Resultado</th></tr></thead>
         <tbody><tr><td>model</td><td>— LlamaModel</td></tr><tr><td>input_shape</td><td>— 1,512</td></tr><tr><td>dtype</td><td>— float16</td></tr><tr><td>gpu</td><td>— NVIDIA GeForce RTX 5060 Laptop GPU</td></tr><tr><td>reference</td><td>— {'output_shape': '[1, 512, 32000]', 'latency_ms': 4.75}</td></tr><tr><td>optimized</td><td>— {'output_shape': '[1, 512, 32000]', 'latency_ms': 8.87, 'kernels_replaced': [{'type': 'matmul', 'rank': 1, 'speedup': 1.218, 'path': 'workspace/kernel_matmul_1_optimized.py'}, {'type': 'flash_attention', 'rank': 4, 'speedup': 1.418, 'path': 'workspace/kernel_flash_attention_4_optimized.py'}]}</td></tr><tr><td>verification</td><td>— {'correctness': 'FAIL', 'max_abs_error': 0.00390625, 'mean_abs_error': 0.00036828246084041893, 'has_nan': False, 'has_inf': False}</td></tr><tr><td>summary</td><td>— {'original_latency_ms': 4.75, 'optimized_latency_ms': 8.87, 'end_to_end_speedup': 0.536, 'kernels_replaced': 2}</td></tr></tbody>
       </table>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">📋</span> Experimentos</div>
+    <div class="section" role="region" aria-label="Experimentos">
+      <div class="section-title"><span class="icon" aria-hidden="true">📋</span> Experimentos</div>
       
         <h6 style="margin-top:1.5rem;color:#374151;font-weight:600">kernel_matmul_1_results</h6>
         <div style="overflow-x:auto">
@@ -283,13 +287,14 @@
     </div>
   </div>
 
-  <div class="footer">
-    AutoKernel — Pipeline nocturno de optimización de kernels GPU<br>
-    <a href="https://github.com/Iniciativas-Alexendros/autokernel" style="color:#6366f1;text-decoration:none">GitHub</a> ·
-    <a href="https://iniciativas-alexendros.github.io/autokernel/" style="color:#6366f1;text-decoration:none">Dashboard</a>
+  <div class="footer" role="contentinfo">
+    <p>AutoKernel — Pipeline nocturno de optimización de kernels GPU</p>
+    <p><a href="https://github.com/Iniciativas-Alexendros/autokernel" style="color:#6366f1;text-decoration:none">GitHub</a> ·
+    <a href="https://iniciativas-alexendros.github.io/autokernel/" style="color:#6366f1;text-decoration:none">Dashboard</a></p>
+    <p style="font-size:0.75rem;color:#94a3b8">Este sitio no utiliza cookies ni rastreadores.</p>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer crossorigin="anonymous"></script>
   <script>
     const kernels = ["matmul", "elementwise", "elementwise", "flash_attention", "elementwise"];
     const speedups = [1.218, 0, 0, 1.418, 0];
@@ -316,6 +321,24 @@
     } else {
       document.getElementById('speedup-chart').innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem">Sin datos de kernels</p>';
     }
+
+    document.getElementById('copy-url').addEventListener('click', function() {
+      navigator.clipboard.writeText(window.location.href).then(function() {
+        alert('Enlace copiado');
+      }).catch(function() {
+        alert('No se pudo copiar el enlace');
+      });
+    });
+
+    document.getElementById('download-report').addEventListener('click', function() {
+      const payload = {"kernels": ["matmul", "elementwise", "elementwise", "flash_attention", "elementwise"], "speedups": [1.218, 0, 0, 1.418, 0]};
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'autokernel-summary.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
   </script>
 
 </body>

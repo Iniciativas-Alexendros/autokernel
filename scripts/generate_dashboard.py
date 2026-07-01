@@ -249,11 +249,15 @@ def generate_dashboard(workspace: Path, config_path: Path, output: Path) -> None
 </head>
 <body>
 
-  <div class="header">
+  <div class="header" role="banner">
     <div class="container">
-      <h1>⚡ AutoKernel</h1>
+      <h1><span aria-hidden="true">⚡</span> AutoKernel</h1>
       <p>Pipeline nocturno de optimización de kernels GPU — RTX 5060</p>
       <p style="color:#64748b;font-size:0.8rem">Última actualización: {_now()}</p>
+      <div style="margin-top:1rem">
+        <button id="copy-url" aria-label="Copiar enlace del dashboard" style="background:#334155;color:#fff;border:0;padding:0.5rem 1rem;border-radius:6px;cursor:pointer">Copiar enlace</button>
+        <button id="download-report" aria-label="Descargar resumen JSON" style="background:#334155;color:#fff;border:0;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;margin-left:0.5rem">Descargar JSON</button>
+      </div>
     </div>
   </div>
 
@@ -285,56 +289,57 @@ def generate_dashboard(workspace: Path, config_path: Path, output: Path) -> None
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">📊</span> Speedup por Kernel</div>
-      <div id="speedup-chart" style="height:300px"></div>
+    <div class="section" role="region" aria-label="Speedup por kernel">
+      <div class="section-title"><span class="icon" aria-hidden="true">📊</span> Speedup por Kernel</div>
+      <div id="speedup-chart" style="height:300px" role="img" aria-label="Gráfico de speedup por kernel"></div>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">🎯</span> Modelos Objetivo</div>
+    <div class="section" role="region" aria-label="Modelos objetivo">
+      <div class="section-title"><span class="icon" aria-hidden="true">🎯</span> Modelos Objetivo</div>
       <table>
         <thead><tr><th>Modelo</th><th>Clase</th><th>Shape</th><th>Dtype</th></tr></thead>
         <tbody>{models_rows if models_rows else '<tr><td colspan="4" style="color:#94a3b8;text-align:center">Sin modelos configurados</td></tr>'}</tbody>
       </table>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">🔧</span> Optimización de Kernels</div>
+    <div class="section" role="region" aria-label="Optimización de kernels">
+      <div class="section-title"><span class="icon" aria-hidden="true">🔧</span> Optimización de Kernels</div>
       <table>
         <thead><tr><th>Estado</th><th>Tipo</th><th>Baseline</th><th>Mejor</th><th>Speedup</th><th>Exps</th><th>Conservados</th><th>Tiempo</th></tr></thead>
         <tbody>{_kernel_rows(kernels) if kernels else '<tr><td colspan="8" style="color:#94a3b8;text-align:center">Sin datos de optimización</td></tr>'}</tbody>
       </table>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">🧪</span> Perfil — Top Kernels</div>
+    <div class="section" role="region" aria-label="Perfil top kernels">
+      <div class="section-title"><span class="icon" aria-hidden="true">🧪</span> Perfil — Top Kernels</div>
       <table>
         <thead><tr><th>Kernel</th><th>Distribución</th><th style="text-align:right">% Tiempo</th></tr></thead>
         <tbody>{profile_rows if profile_rows else '<tr><td colspan="3" style="color:#94a3b8;text-align:center">Sin datos de perfilado</td></tr>'}</tbody>
       </table>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">✅</span> Verificación End-to-End</div>
+    <div class="section" role="region" aria-label="Verificación end to end">
+      <div class="section-title"><span class="icon" aria-hidden="true">✅</span> Verificación End-to-End</div>
       <table>
         <thead><tr><th>Check</th><th>Resultado</th></tr></thead>
         <tbody>{verify_rows if verify_rows else '<tr><td colspan="2" style="color:#94a3b8;text-align:center">Sin datos de verificación</td></tr>'}</tbody>
       </table>
     </div>
 
-    <div class="section">
-      <div class="section-title"><span class="icon">📋</span> Experimentos</div>
+    <div class="section" role="region" aria-label="Experimentos">
+      <div class="section-title"><span class="icon" aria-hidden="true">📋</span> Experimentos</div>
       {_experiment_table(results) if results else '<p style="color:#94a3b8;text-align:center;margin:0">Sin experimentos registrados.</p>'}
     </div>
   </div>
 
-  <div class="footer">
-    AutoKernel — Pipeline nocturno de optimización de kernels GPU<br>
-    <a href="https://github.com/Iniciativas-Alexendros/autokernel" style="color:#6366f1;text-decoration:none">GitHub</a> ·
-    <a href="https://iniciativas-alexendros.github.io/autokernel/" style="color:#6366f1;text-decoration:none">Dashboard</a>
+  <div class="footer" role="contentinfo">
+    <p>AutoKernel — Pipeline nocturno de optimización de kernels GPU</p>
+    <p><a href="https://github.com/Iniciativas-Alexendros/autokernel" style="color:#6366f1;text-decoration:none">GitHub</a> ·
+    <a href="https://iniciativas-alexendros.github.io/autokernel/" style="color:#6366f1;text-decoration:none">Dashboard</a></p>
+    <p style="font-size:0.75rem;color:#94a3b8">Este sitio no utiliza cookies ni rastreadores.</p>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer crossorigin="anonymous"></script>
   <script>
     const kernels = {json.dumps(plotly_kernels)};
     const speedups = {json.dumps(plotly_speedups)};
@@ -361,6 +366,24 @@ def generate_dashboard(workspace: Path, config_path: Path, output: Path) -> None
     }} else {{
       document.getElementById('speedup-chart').innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem">Sin datos de kernels</p>';
     }}
+
+    document.getElementById('copy-url').addEventListener('click', function() {{
+      navigator.clipboard.writeText(window.location.href).then(function() {{
+        alert('Enlace copiado');
+      }}).catch(function() {{
+        alert('No se pudo copiar el enlace');
+      }});
+    }});
+
+    document.getElementById('download-report').addEventListener('click', function() {{
+      const payload = {json.dumps({"kernels": plotly_kernels, "speedups": plotly_speedups})};
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {{type: 'application/json'}});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'autokernel-summary.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }});
   </script>
 
 </body>
