@@ -1,7 +1,6 @@
 import importlib.util
 import os
 import sys
-from pathlib import Path
 
 REPO_ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.join(REPO_ROOT, "scripts"))
@@ -17,7 +16,6 @@ def _load_module():
 
 
 def test_task_advance_phase(tmp_path):
-    import yaml
 
     cfg_path = tmp_path / "pipeline.yaml"
     cfg_path.write_text("pipeline:\n  target_models: []\n")

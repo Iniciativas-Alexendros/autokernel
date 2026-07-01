@@ -12,9 +12,7 @@ def _make_publisher(tmp_path):
 
     with mock.patch.object(GitHubPublisher, "_ensure_gh", lambda self: None):
         with mock.patch.object(GitHubPublisher, "_ensure_git_auth", lambda self: None):
-            with mock.patch.object(
-                GitHubPublisher, "_detect_default_branch", lambda self: "main"
-            ):
+            with mock.patch.object(GitHubPublisher, "_detect_default_branch", lambda self: "main"):
                 publisher = GitHubPublisher(repo_dir=tmp_path)
                 publisher.default_branch = "main"
                 return publisher
