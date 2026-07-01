@@ -1206,6 +1206,28 @@ async def cmd_migrate_cuda(args) -> None:
         print(f"Validation: FAILED - {exc}")
 
 
+def cmd_publish(args) -> None:
+    """Publish a validated kernel to GitHub as a PR."""
+    from autokernel.github_publisher import GitHubPublisher
+
+    verification = json.loads(args.verification)
+    publisher = GitHubPublisher()
+    result = publisher.publish(
+        kernel_path=Path(args.kernel_path),
+        model_name=args.model,
+        kernel_type=args.kernel_type,
+        verification=verification,
+        report_text=args.report,
+    )
+    if result.success:
+        print(f"PR created: {result.pr_url}")
+        print(f"Branch: {result.branch}")
+        print(f"Auto-merge: {'enabled' if result.merged else 'pending'}")
+    else:
+        print(f"Publish failed: {result.message}")
+        sys.exit(1)
+
+
 def cmd_report_extended(state: dict) -> None:
     """Generate extended report with nightly metrics."""
     # First run standard report
@@ -1300,6 +1322,18 @@ def build_parser() -> argparse.ArgumentParser:
         "report-extended", help="Generate extended report with nightly metrics"
     )
 
+    # Publish a validated kernel to GitHub
+    publish = sub.add_parser("publish", help="Publish validated kernel as GitHub PR")
+    publish.add_argument("--kernel-path", required=True, help="Path to optimized kernel file")
+    publish.add_argument("--model", required=True, help="Target model name")
+    publish.add_argument("--kernel-type", required=True, help="Kernel type")
+    publish.add_argument(
+        "--verification",
+        required=True,
+        help='Verification JSON: {"correctness": true, "speedup": 1.2}',
+    )
+    publish.add_argument("--report", default="", help="Markdown report text")
+
     return parser
 
 
@@ -1333,6 +1367,8 @@ def main() -> None:
         asyncio.run(cmd_migrate_cuda(args))
     elif args.command == "report-extended":
         cmd_report_extended(state)
+    elif args.command == "publish":
+        cmd_publish(args)
     else:
         parser.print_help()
         sys.exit(1)
