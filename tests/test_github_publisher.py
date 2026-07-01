@@ -7,20 +7,25 @@ REPO_ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, REPO_ROOT)
 
 
+def _make_publisher(tmp_path):
+    from autokernel.github_publisher import GitHubPublisher
+
+    with mock.patch.object(GitHubPublisher, "_ensure_gh", lambda self: None):
+        with mock.patch.object(GitHubPublisher, "_ensure_git_auth", lambda self: None):
+            with mock.patch.object(
+                GitHubPublisher, "_detect_default_branch", lambda self: "main"
+            ):
+                publisher = GitHubPublisher(repo_dir=tmp_path)
+                publisher.default_branch = "main"
+                return publisher
+
+
 class TestGitHubPublisher:
     """Tests del publicador de GitHub."""
 
     def test_publish_blocked_on_bad_verification(self, tmp_path):
         """No publica si correctness es false o speedup <= 1.0."""
-        from autokernel.github_publisher import GitHubPublisher
-
-        publisher = GitHubPublisher(repo_dir=tmp_path)
-
-        # Patch _ensure_gh to avoid needing gh CLI
-        publisher._ensure_gh = lambda: None
-        publisher._ensure_git_auth = lambda: None
-        publisher._detect_default_branch = lambda: "main"
-        publisher.default_branch = "main"
+        publisher = _make_publisher(tmp_path)
 
         kernel_path = tmp_path / "kernel_matmul_optimized.py"
         kernel_path.write_text("KERNEL_TYPE = 'matmul'\n")
@@ -36,13 +41,7 @@ class TestGitHubPublisher:
 
     def test_publish_blocked_on_low_speedup(self, tmp_path):
         """No publica si speedup <= 1.0."""
-        from autokernel.github_publisher import GitHubPublisher
-
-        publisher = GitHubPublisher(repo_dir=tmp_path)
-        publisher._ensure_gh = lambda: None
-        publisher._ensure_git_auth = lambda: None
-        publisher._detect_default_branch = lambda: "main"
-        publisher.default_branch = "main"
+        publisher = _make_publisher(tmp_path)
 
         kernel_path = tmp_path / "kernel_matmul_optimized.py"
         kernel_path.write_text("KERNEL_TYPE = 'matmul'\n")
@@ -58,19 +57,12 @@ class TestGitHubPublisher:
 
     def test_publish_creates_branch_and_pr(self, tmp_path):
         """Flujo exitoso simulado con mocks."""
-        from autokernel.github_publisher import GitHubPublisher
-
-        publisher = GitHubPublisher(repo_dir=tmp_path)
-        publisher._ensure_gh = lambda: None
-        publisher._ensure_git_auth = lambda: None
-        publisher._detect_default_branch = lambda: "main"
-        publisher.default_branch = "main"
+        publisher = _make_publisher(tmp_path)
 
         kernel_path = tmp_path / "kernel_matmul_optimized.py"
         kernel_path.write_text("KERNEL_TYPE = 'matmul'\n")
 
         with mock.patch.object(publisher, "_run") as mock_run:
-            # Return success for every subprocess call
             mock_run.return_value = (0, "", "")
             with mock.patch.object(publisher, "_git") as mock_git:
                 mock_git.return_value = (0, "main", "")

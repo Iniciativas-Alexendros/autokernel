@@ -173,8 +173,8 @@ class ContinuousPipeline:
 
         If nvidia-smi is unavailable, assumes the GPU is available.
         """
-        nvidia_smi = shutil.which("nvidia-smi") or "/usr/bin/nvidia-smi"
-        if not Path(nvidia_smi).exists():
+        nvidia_smi = shutil.which("nvidia-smi")
+        if not nvidia_smi or not Path(nvidia_smi).exists():
             return True
         try:
             result = subprocess.run(

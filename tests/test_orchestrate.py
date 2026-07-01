@@ -6,6 +6,7 @@ import pytest
 REPO_ROOT = os.path.join(os.path.dirname(__file__), "..")
 
 
+@pytest.mark.slow
 class TestOrchestrateCLI:
     """Tests de la interfaz CLI de orchestrate.py."""
 

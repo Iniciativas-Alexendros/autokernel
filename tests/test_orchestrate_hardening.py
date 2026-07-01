@@ -57,6 +57,7 @@ throughput_tflops: 0.000
         assert result["throughput_tflops"] == 0.0
 
 
+@pytest.mark.slow
 class TestNightlyPipelineScript:
     """Tests del script de pipeline nocturno."""
 
