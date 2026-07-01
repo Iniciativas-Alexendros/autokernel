@@ -18,12 +18,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
+import logging
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+logger = logging.getLogger(__name__)
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -52,8 +53,8 @@ def count_verified_kernels() -> tuple[int, int]:
                 verified += 1
             else:
                 failed += 1
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("could not read verification file %s: %s", f, exc)
     return verified, failed
 
 
@@ -66,7 +67,7 @@ def git_stats() -> dict[str, Any]:
     rc, out, _ = _run(["git", "rev-parse", "--short", "HEAD"])
     stats["commit"] = out.strip() if rc == 0 else "unknown"
     rc, out, _ = _run(["git", "status", "--short"])
-    stats["uncommitted_files"] = len([l for l in out.splitlines() if l.strip()])
+    stats["uncommitted_files"] = len([line for line in out.splitlines() if line.strip()])
     rc, out, _ = _run(["git", "log", "--oneline", "-5"])
     stats["recent_commits"] = out.strip().splitlines() if rc == 0 else []
     return stats

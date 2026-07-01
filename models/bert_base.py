@@ -7,7 +7,6 @@ Usage:
     uv run profile.py --model models/bert_base.py --class-name BertModel --input-shape 8,512 --dtype float16
 """
 
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -26,9 +25,7 @@ class BertSelfAttention(nn.Module):
         self.out_proj = nn.Linear(hidden_size, hidden_size)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(
-        self, x: torch.Tensor, attention_mask: torch.Tensor = None
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, attention_mask: torch.Tensor = None) -> torch.Tensor:
         B, T, C = x.shape
 
         q = self.query(x).view(B, T, self.num_heads, self.head_dim).transpose(1, 2)

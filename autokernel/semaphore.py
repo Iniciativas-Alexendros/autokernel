@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-import subprocess
+import logging
 import time
 from contextlib import asynccontextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import ollama as ollama_client
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -61,15 +63,15 @@ class ResourceSemaphore:
             try:
                 ollama_client.stop(self.current_model)
                 await asyncio.sleep(0.5)
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("ollama stop failed for %s: %s", self.current_model, exc)
             self.stats.llm_switches += 1
 
         # Pre-load model (non-blocking)
         try:
             ollama_client.generate(model=model, prompt="", keep_alive="5m")
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("ollama pre-load failed for %s: %s", model, exc)
         self.current_model = model
 
     @asynccontextmanager
@@ -100,6 +102,6 @@ class ResourceSemaphore:
         if self.current_model:
             try:
                 ollama_client.stop(self.current_model)
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("ollama cleanup failed for %s: %s", self.current_model, exc)
             self.current_model = None

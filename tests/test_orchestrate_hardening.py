@@ -76,4 +76,4 @@ class TestNightlyPipelineScript:
         with open(script_path) as f:
             content = f.read()
         assert "compglob" not in content, "comando inexistente compglob aún presente"
-        assert "find \"$MODEL_WS\" -maxdepth 1" in content, "debe usar find para globbing portable"
+        assert 'find "$MODEL_WS" -maxdepth 1' in content, "debe usar find para globbing portable"

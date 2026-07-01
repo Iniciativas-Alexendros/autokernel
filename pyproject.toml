@@ -59,6 +59,14 @@ name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint.per-file-ignores]
+"kernel.py" = ["E402"]
+"kernels/**/*.py" = ["E402"]
+"tests/test_ollama_integration.py" = ["E402"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"

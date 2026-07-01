@@ -1,6 +1,5 @@
 import json
 import os
-import pytest
 
 WORKSPACE = os.path.join(os.path.dirname(__file__), "..", "workspace")
 REPORT_PATH = os.path.join(WORKSPACE, "profile_report.json")
@@ -56,9 +55,7 @@ class TestOptimizationPlan:
         """Plan tiene targets de optimización."""
         plan = _load_json(PLAN_PATH)
         assert plan, "Plan vacío"
-        has_key = (
-            "targets" in plan or "kernels" in plan or "kernels_to_optimize" in plan
-        )
+        has_key = "targets" in plan or "kernels" in plan or "kernels_to_optimize" in plan
         assert has_key, f"Plan sin targets. Keys: {list(plan.keys())}"
 
     def test_plan_kernel_types_valid(self):

@@ -159,11 +159,7 @@ def flash_attention_kernel(
 
     # Store output
     o_ptrs = (
-        O_ptr
-        + o_offset_z
-        + o_offset_h
-        + offs_m[:, None] * stride_om
-        + offs_d[None, :] * stride_ok
+        O_ptr + o_offset_z + o_offset_h + offs_m[:, None] * stride_om + offs_d[None, :] * stride_ok
     )
     o_mask = offs_m[:, None] < M_size
     tl.store(o_ptrs, acc.to(O_ptr.dtype.element_ty), mask=o_mask)
@@ -194,7 +190,7 @@ def kernel_fn(
     if sm_scale is None:
         sm_scale = 1.0 / math.sqrt(D)
 
-    O = torch.empty_like(Q)
+    out = torch.empty_like(Q)
 
     # Block sizes -- must be powers of 2
     # D (head_dim) must be a constexpr and power of 2 for tl.trans to work
@@ -211,7 +207,7 @@ def kernel_fn(
         Q,
         K,
         V,
-        O,
+        out,
         Q.stride(0),
         Q.stride(1),
         Q.stride(2),
@@ -224,10 +220,10 @@ def kernel_fn(
         V.stride(1),
         V.stride(2),
         V.stride(3),
-        O.stride(0),
-        O.stride(1),
-        O.stride(2),
-        O.stride(3),
+        out.stride(0),
+        out.stride(1),
+        out.stride(2),
+        out.stride(3),
         Z,
         H,
         M_size,
@@ -239,4 +235,4 @@ def kernel_fn(
         BLOCK_N=BLOCK_N,
     )
 
-    return O
+    return out

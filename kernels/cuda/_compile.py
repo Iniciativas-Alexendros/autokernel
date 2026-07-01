@@ -243,9 +243,7 @@ def compile_cuda(
             print(f"CUDA COMPILATION FAILED: {func_name}", file=sys.stderr)
             print(f"{'=' * 60}", file=sys.stderr)
             print(f"Error: {e}", file=sys.stderr)
-            print(
-                f"\nCUDA source ({len(cuda_src.splitlines())} lines):", file=sys.stderr
-            )
+            print(f"\nCUDA source ({len(cuda_src.splitlines())} lines):", file=sys.stderr)
             for i, line in enumerate(cuda_src.splitlines(), 1):
                 print(f"  {i:4d} | {line}", file=sys.stderr)
             print(f"\nFlags: {' '.join(cuda_flags)}", file=sys.stderr)

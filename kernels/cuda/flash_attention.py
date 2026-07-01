@@ -267,9 +267,9 @@ def kernel_fn(
         V = V.to(torch.float16)
 
     mod = _get_module()
-    O = mod.flash_attention_cuda(Q, K, V, sm_scale)
+    out = mod.flash_attention_cuda(Q, K, V, sm_scale)
 
     if orig_dtype != torch.float16:
-        O = O.to(orig_dtype)
+        out = out.to(orig_dtype)
 
-    return O
+    return out

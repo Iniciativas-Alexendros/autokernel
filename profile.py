@@ -150,11 +150,7 @@ def _fallback_detect_gpu() -> GPUSpec:
             # ROCm fallback: no clock_rate available
             peak_fp16 = 500.0
             peak_bw = 2000.0
-        l2 = (
-            props.L2_cache_size / (1024 * 1024)
-            if hasattr(props, "L2_cache_size")
-            else 0.0
-        )
+        l2 = props.L2_cache_size / (1024 * 1024) if hasattr(props, "L2_cache_size") else 0.0
 
     peak_bf16 = peak_fp16
     peak_fp32 = peak_fp16 / 2.0
@@ -175,9 +171,7 @@ def _fallback_detect_gpu() -> GPUSpec:
 def detect_gpu() -> GPUSpec:
     """Try to import detect_gpu from bench.py; fall back to standalone."""
     try:
-        bench_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "bench.py"
-        )
+        bench_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bench.py")
         spec = importlib.util.spec_from_file_location("bench", bench_path)
         if spec and spec.loader:
             bench_mod = importlib.util.module_from_spec(spec)
@@ -218,9 +212,7 @@ def _resolve_dtype(dtype_str: str) -> torch.dtype:
     }
     dtype_str = dtype_str.lower().strip()
     if dtype_str not in mapping:
-        raise ValueError(
-            f"Unsupported dtype '{dtype_str}'. Supported: {list(mapping.keys())}"
-        )
+        raise ValueError(f"Unsupported dtype '{dtype_str}'. Supported: {list(mapping.keys())}")
     return mapping[dtype_str]
 
 
@@ -266,9 +258,7 @@ def _load_model_from_module(
         ) from e
 
     if not hasattr(module, class_name):
-        raise AttributeError(
-            f"Class '{class_name}' not found in module '{module_name}'."
-        )
+        raise AttributeError(f"Class '{class_name}' not found in module '{module_name}'.")
 
     cls = getattr(module, class_name)
 
@@ -283,9 +273,7 @@ def _load_model_from_module(
                     f"{class_name}.from_pretrained(): {e}"
                 ) from e
         else:
-            raise RuntimeError(
-                f"{class_name} does not have a from_pretrained() method."
-            )
+            raise RuntimeError(f"{class_name} does not have a from_pretrained() method.")
     else:
         try:
             model = cls()
@@ -373,9 +361,7 @@ def generate_input(
         # Language model: generate integer token IDs
         batch = input_shape[0] if len(input_shape) >= 1 else 1
         seq_len = input_shape[1] if len(input_shape) >= 2 else 512
-        input_ids = torch.randint(
-            0, 32000, (batch, seq_len), device=device, dtype=torch.long
-        )
+        input_ids = torch.randint(0, 32000, (batch, seq_len), device=device, dtype=torch.long)
         return {"input_ids": input_ids}
     else:
         # Generic model: generate float tensor of given shape
@@ -447,8 +433,7 @@ def _prepare_model_and_input(
                         model(inputs["x"])
                     if attempt_batch != original_batch:
                         print(
-                            f"  NOTE: Reduced batch size from {original_batch} to "
-                            f"{attempt_batch}."
+                            f"  NOTE: Reduced batch size from {original_batch} to {attempt_batch}."
                         )
                     return model, inputs
                 except torch.cuda.OutOfMemoryError:
@@ -457,8 +442,7 @@ def _prepare_model_and_input(
                 except Exception:
                     pass
             raise RuntimeError(
-                f"Forward pass failed: {e}\n"
-                "Check that --input-shape and --class-name are correct."
+                f"Forward pass failed: {e}\nCheck that --input-shape and --class-name are correct."
             ) from e
 
     raise RuntimeError("Could not run forward pass with any batch size.")
@@ -719,11 +703,7 @@ def build_report(
     top_kernels = []
     cumulative_pct = 0.0
     for i, r in enumerate(records):
-        pct = (
-            (r.gpu_time_us / total_gpu_time_us * 100.0)
-            if total_gpu_time_us > 0
-            else 0.0
-        )
+        pct = (r.gpu_time_us / total_gpu_time_us * 100.0) if total_gpu_time_us > 0 else 0.0
         cumulative_pct += pct
         top_kernels.append(
             {
@@ -745,15 +725,11 @@ def build_report(
     # Optimization summary
     supported_time_us = sum(r.gpu_time_us for r in records if r.supported)
     supported_pct = (
-        (supported_time_us / total_gpu_time_us * 100.0)
-        if total_gpu_time_us > 0
-        else 0.0
+        (supported_time_us / total_gpu_time_us * 100.0) if total_gpu_time_us > 0 else 0.0
     )
 
     top5_time_us = sum(r.gpu_time_us for r in records[:5])
-    top5_pct = (
-        (top5_time_us / total_gpu_time_us * 100.0) if total_gpu_time_us > 0 else 0.0
-    )
+    top5_pct = (top5_time_us / total_gpu_time_us * 100.0) if total_gpu_time_us > 0 else 0.0
 
     # Estimated max speedup via Amdahl's law:
     # If supported kernels can be made ~3x faster on average:
@@ -783,8 +759,7 @@ def build_report(
             "supported_kernels_pct": round(supported_pct, 1),
             "top5_pct": round(top5_pct, 1),
             "estimated_max_speedup": (
-                f"{amdahl_speedup:.1f}x "
-                f"(Amdahl's law, f={f:.0%} supported, {s:.0f}x per-kernel)"
+                f"{amdahl_speedup:.1f}x (Amdahl's law, f={f:.0%} supported, {s:.0f}x per-kernel)"
             ),
         },
     }
@@ -879,8 +854,7 @@ def print_report(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "AutoKernel Model Profiler -- identify GPU kernel bottlenecks "
-            "in any PyTorch model."
+            "AutoKernel Model Profiler -- identify GPU kernel bottlenecks in any PyTorch model."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
@@ -1006,8 +980,7 @@ def main() -> int:
         input_shape = [int(x.strip()) for x in args.input_shape.split(",")]
     except ValueError:
         print(
-            f"ERROR: Invalid --input-shape '{args.input_shape}'. "
-            "Expected comma-separated integers."
+            f"ERROR: Invalid --input-shape '{args.input_shape}'. Expected comma-separated integers."
         )
         return 1
 
@@ -1096,10 +1069,7 @@ def main() -> int:
         return 1
 
     if not records:
-        print(
-            "WARNING: No CUDA kernels were captured. "
-            "The model may not use GPU operations."
-        )
+        print("WARNING: No CUDA kernels were captured. The model may not use GPU operations.")
         print("Check that the model runs on GPU and the input shape is correct.")
         return 1
 
@@ -1112,9 +1082,7 @@ def main() -> int:
         if os.path.isfile(compile_log_path) and os.path.getsize(compile_log_path) > 0:
             extras["compile_log_path"] = compile_log_path
         else:
-            print(
-                "  NOTE: torch.compile log is empty (no torch.compile calls detected)."
-            )
+            print("  NOTE: torch.compile log is empty (no torch.compile calls detected).")
 
     # Build report
     report = build_report(records, gpu, args, model_desc)
@@ -1161,12 +1129,8 @@ def main() -> int:
         print()
         print("  Suggested next steps:")
         if "trace_path" in extras:
-            print(
-                f"    - View trace in Chrome:  chrome://tracing  (load {extras['trace_path']})"
-            )
-            print(
-                "    - Run HTA analysis:      pip install HolisticTraceAnalysis && analyze trace"
-            )
+            print(f"    - View trace in Chrome:  chrome://tracing  (load {extras['trace_path']})")
+            print("    - Run HTA analysis:      pip install HolisticTraceAnalysis && analyze trace")
             print("    - Run trace-blame:       trace-blame " + extras["trace_path"])
         if "memory_snapshot_path" in extras:
             print(

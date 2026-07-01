@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
+import logging
+import shutil
 import signal
 import subprocess
 import sys
@@ -24,6 +25,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -170,9 +173,12 @@ class ContinuousPipeline:
 
         If nvidia-smi is unavailable, assumes the GPU is available.
         """
+        nvidia_smi = shutil.which("nvidia-smi") or "/usr/bin/nvidia-smi"
+        if not Path(nvidia_smi).exists():
+            return True
         try:
             result = subprocess.run(
-                ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
+                [nvidia_smi, "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -182,7 +188,8 @@ class ContinuousPipeline:
             util = float(result.stdout.strip().splitlines()[0].strip())
             threshold = self.config.get("continuous", {}).get("gpu_util_threshold", 25.0)
             return util < threshold
-        except Exception:
+        except Exception as exc:
+            logger.warning("gpu availability check failed: %s", exc)
             return True
 
     def _model_workspace(self, task: Task) -> Path:
@@ -215,9 +222,17 @@ class ContinuousPipeline:
                 sys.executable,
                 str(REPO_ROOT / "extract.py"),
                 "--top",
-                str(self.config.get("pipeline", {}).get("phases", {}).get("extract", {}).get("top_k", 5)),
+                str(
+                    self.config.get("pipeline", {})
+                    .get("phases", {})
+                    .get("extract", {})
+                    .get("top_k", 5)
+                ),
                 "--backend",
-                self.config.get("pipeline", {}).get("phases", {}).get("extract", {}).get("backend", "triton"),
+                self.config.get("pipeline", {})
+                .get("phases", {})
+                .get("extract", {})
+                .get("backend", "triton"),
                 "--report",
                 str(model_ws / "profile" / "profile_report.json"),
             ]
@@ -225,7 +240,9 @@ class ContinuousPipeline:
 
         if phase == "optimizing":
             opt_cfg = self.config.get("pipeline", {}).get("phases", {}).get("optimize", {})
-            kernel_types = [task.kernel_type] if task.kernel_type else self._kernel_types_from_plan(model_ws)
+            kernel_types = (
+                [task.kernel_type] if task.kernel_type else self._kernel_types_from_plan(model_ws)
+            )
             for kt in kernel_types:
                 cmd = [
                     sys.executable,
@@ -298,7 +315,9 @@ class ContinuousPipeline:
         """Run a command and record duration."""
         t0 = time.monotonic()
         try:
-            result = subprocess.run(cmd, cwd=REPO_ROOT, timeout=3600, capture_output=True, text=True)
+            result = subprocess.run(
+                cmd, cwd=REPO_ROOT, timeout=3600, capture_output=True, text=True
+            )
             elapsed = time.monotonic() - t0
             self._record_phase_duration(label, elapsed)
             if result.returncode != 0:
@@ -316,9 +335,7 @@ class ContinuousPipeline:
         durations.setdefault(label, []).append(round(elapsed, 2))
 
     def _record_error(self, message: str) -> None:
-        self.metrics.setdefault("errors", []).append(
-            {"timestamp": self._now(), "message": message}
-        )
+        self.metrics.setdefault("errors", []).append({"timestamp": self._now(), "message": message})
         self.metrics["errors"] = self.metrics["errors"][-100:]  # keep last 100
 
     def _advance_phase(self, task: Task) -> None:

@@ -1,10 +1,8 @@
 import importlib.util
 import os
 import sys
-import tempfile
 from pathlib import Path
 
-import pytest
 import yaml
 
 REPO_ROOT = os.path.join(os.path.dirname(__file__), "..")

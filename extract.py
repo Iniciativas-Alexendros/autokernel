@@ -17,7 +17,7 @@ import json
 import os
 import re
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -335,8 +335,8 @@ def generate_kernel_file(
     double_shape = scale_shape(model_shape, 2.0)
 
     shape_display = shape_to_display(model_shape)
-    half_display = shape_to_display(half_shape)
-    double_display = shape_to_display(double_shape)
+    shape_to_display(half_shape)
+    shape_to_display(double_shape)
 
     tolerances = TOLERANCES_MAP.get(
         op_type,
@@ -358,22 +358,20 @@ def generate_kernel_file(
 
     # Header docstring
     lines.append('"""')
-    lines.append(f"AutoKernel -- Extracted kernel from model profiling.")
+    lines.append("AutoKernel -- Extracted kernel from model profiling.")
     lines.append(f"Op type: {op_type}")
     lines.append(f"Rank: {rank} ({pct_total}% of GPU time)")
     lines.append(f"Model shape: {shape_display}")
-    lines.append(f"")
+    lines.append("")
     lines.append(f"This kernel was extracted from profiling {model_name}.")
-    lines.append(
-        f"The agent optimizes this to maximize throughput at the model-specific shapes."
-    )
+    lines.append("The agent optimizes this to maximize throughput at the model-specific shapes.")
     lines.append('"""')
     lines.append("")
 
     # KERNEL_TYPE and BACKEND
     lines.append(f'KERNEL_TYPE = "{op_type}"')
     if backend == "cuda":
-        lines.append(f'BACKEND = "cuda"')
+        lines.append('BACKEND = "cuda"')
     lines.append("")
 
     # Model-specific shapes
@@ -382,12 +380,10 @@ def generate_kernel_file(
     lines.append("")
 
     # Benchmark config
-    lines.append(
-        "# Benchmark config (self-describing -- bench.py can load this dynamically)"
-    )
+    lines.append("# Benchmark config (self-describing -- bench.py can load this dynamically)")
     lines.append("TEST_SIZES = [")
     lines.append(f'    ("model_primary", {repr(model_shape)}),')
-    lines.append(f"    # Also test nearby sizes for robustness")
+    lines.append("    # Also test nearby sizes for robustness")
     lines.append(f'    ("model_half", {repr(half_shape)}),')
     lines.append(f'    ("model_double", {repr(double_shape)}),')
     lines.append("]")
@@ -413,9 +409,7 @@ def generate_kernel_file(
     lines.append("")
     lines.append(f"# {'=' * 70}")
     backend_label = "CUDA C++" if backend == "cuda" else "Triton"
-    backend_dir = (
-        f"kernels/cuda/{op_type}.py" if backend == "cuda" else f"kernels/{op_type}.py"
-    )
+    backend_dir = f"kernels/cuda/{op_type}.py" if backend == "cuda" else f"kernels/{op_type}.py"
     lines.append(f"# {backend_label} kernel code (from {backend_dir})")
     lines.append(f"# {'=' * 70}")
     lines.append("")
@@ -449,9 +443,7 @@ def get_supported_kernels(report: Dict[str, Any]) -> List[Dict[str, Any]]:
     Extract the list of supported (autokernel_supported=True) kernels from
     the profile report, sorted by rank.
     """
-    kernels = report.get(
-        "top_kernels", report.get("kernels", report.get("bottleneck_kernels", []))
-    )
+    kernels = report.get("top_kernels", report.get("kernels", report.get("bottleneck_kernels", [])))
     supported = []
     for k in kernels:
         if k.get("autokernel_supported", False):
@@ -489,9 +481,7 @@ def generate_optimization_plan(
                 "model_shape": entry["model_shape"],
                 "gpu_time_ms": entry["gpu_time_ms"],
                 "pct_total": entry["pct_total"],
-                "estimated_speedup_potential": SPEEDUP_ESTIMATES.get(
-                    entry["op_type"], "1.5-2x"
-                ),
+                "estimated_speedup_potential": SPEEDUP_ESTIMATES.get(entry["op_type"], "1.5-2x"),
             }
         )
 
@@ -524,7 +514,7 @@ def extract_kernels(
     report = load_profile_report(report_path)
     if report is None:
         print(f"ERROR: Profile report not found at {report_path}")
-        print(f"       Run the profiler first: uv run profile.py")
+        print("       Run the profiler first: uv run profile.py")
         sys.exit(1)
 
     # -- Get model name --
@@ -534,18 +524,14 @@ def extract_kernels(
     supported = get_supported_kernels(report)
     if not supported:
         print("ERROR: No supported kernels found in profile report.")
-        print(
-            "       Ensure the profiler marks kernels with autokernel_supported=True."
-        )
+        print("       Ensure the profiler marks kernels with autokernel_supported=True.")
         sys.exit(1)
 
     # -- Apply filters --
     if kernel_type_filter:
         supported = [k for k in supported if k.get("op_type") == kernel_type_filter]
         if not supported:
-            print(
-                f"WARNING: No kernels of type '{kernel_type_filter}' found in profile report."
-            )
+            print(f"WARNING: No kernels of type '{kernel_type_filter}' found in profile report.")
             sys.exit(1)
 
     if top_n is not None:
@@ -566,9 +552,7 @@ def extract_kernels(
         rank = kernel_info.get("rank", idx + 1)
         op_type = kernel_info.get("op_type", "unknown")
         pct_total = kernel_info.get("pct_total", kernel_info.get("pct_gpu_time", 0.0))
-        gpu_time_ms = kernel_info.get(
-            "gpu_time_ms", kernel_info.get("total_gpu_time_ms", 0.0)
-        )
+        gpu_time_ms = kernel_info.get("gpu_time_ms", kernel_info.get("total_gpu_time_ms", 0.0))
         shape_info_str = kernel_info.get("shape_info", kernel_info.get("shape", ""))
 
         # Parse model shape
@@ -588,9 +572,7 @@ def extract_kernels(
         starter_code = read_starter_kernel(op_type, backend=backend)
         if starter_code is None:
             starter_dir = "kernels/cuda" if backend == "cuda" else "kernels"
-            print(
-                f"  WARNING: No starter kernel found at {starter_dir}/{op_type}.py -- skipping."
-            )
+            print(f"  WARNING: No starter kernel found at {starter_dir}/{op_type}.py -- skipping.")
             skipped += 1
             continue
 
@@ -620,10 +602,7 @@ def extract_kernels(
         position = idx + 1
         total = len(supported)
         shape_display = shape_to_display(model_shape)
-        print(
-            f"  [{position}/{total}] {op_type} (rank {rank}, {pct_total}%) "
-            f"-> {output_relpath}"
-        )
+        print(f"  [{position}/{total}] {op_type} (rank {rank}, {pct_total}%) -> {output_relpath}")
         print(f"        Model shape: {shape_display}")
         starter_dir = "kernels/cuda" if backend == "cuda" else "kernels"
         print(f"        Based on: {starter_dir}/{op_type}.py")
@@ -650,7 +629,7 @@ def extract_kernels(
     plan = generate_optimization_plan(extracted)
     with open(OPTIMIZATION_PLAN_PATH, "w", encoding="utf-8") as f:
         json.dump(plan, f, indent=4)
-    print(f"Optimization plan saved to workspace/optimization_plan.json")
+    print("Optimization plan saved to workspace/optimization_plan.json")
 
     # -- Print next steps --
     print()
@@ -658,8 +637,8 @@ def extract_kernels(
     top_file = top_kernel["output_file"]
     print("Next steps:")
     print(f"  1. Copy a kernel to kernel.py: cp {top_file} kernel.py")
-    print(f"  2. Run benchmark: uv run bench.py")
-    print(f"  3. Start optimizing (or let the agent do it via docs/PLAYBOOK.md)")
+    print("  2. Run benchmark: uv run bench.py")
+    print("  3. Start optimizing (or let the agent do it via docs/PLAYBOOK.md)")
 
 
 # ---------------------------------------------------------------------------

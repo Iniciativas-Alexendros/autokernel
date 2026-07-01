@@ -317,9 +317,7 @@ def _get_module():
     return _module
 
 
-def kernel_fn(
-    x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor
-) -> torch.Tensor:
+def kernel_fn(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) -> torch.Tensor:
     """Entry point called by bench.py. Must match reference.layernorm_ref signature."""
     assert x.is_cuda
 

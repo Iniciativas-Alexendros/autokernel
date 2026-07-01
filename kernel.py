@@ -91,8 +91,7 @@ def fused_gate_up_kernel(
             * (
                 1.0
                 + tl.math.tanh(
-                    0.7978845608
-                    * (acc_gate + 0.044715 * acc_gate * acc_gate * acc_gate)
+                    0.7978845608 * (acc_gate + 0.044715 * acc_gate * acc_gate * acc_gate)
                 )
             )
         )
@@ -144,12 +143,8 @@ def matmul_kernel(
     acc = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
 
     for k in range(0, K, BLOCK_SIZE_K):
-        a = tl.load(
-            a_ptrs, mask=(offs_m[:, None] < M) & (offs_k[None, :] < K), other=0.0
-        )
-        b = tl.load(
-            b_ptrs, mask=(offs_k[:, None] < K) & (offs_n[None, :] < N), other=0.0
-        )
+        a = tl.load(a_ptrs, mask=(offs_m[:, None] < M) & (offs_k[None, :] < K), other=0.0)
+        b = tl.load(b_ptrs, mask=(offs_k[:, None] < K) & (offs_n[None, :] < N), other=0.0)
         acc += tl.dot(a, b)
         a_ptrs += BLOCK_SIZE_K * stride_ak
         b_ptrs += BLOCK_SIZE_K * stride_bk
@@ -191,7 +186,7 @@ def kernel_fn(
     M, K = x.shape
     N, K2 = w_gate.shape
     assert K == K2, f"Hidden dim mismatch: x has {K}, w_gate has {K2}"
-    assert w_up.shape == (N, K), f"w_up shape mismatch"
+    assert w_up.shape == (N, K), "w_up shape mismatch"
 
     hidden = torch.empty((M, N), device=x.device, dtype=x.dtype)
 

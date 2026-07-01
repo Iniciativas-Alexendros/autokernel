@@ -8,11 +8,13 @@ Spec:
 Kernel type: {kernel_type}
 
 Generate complete pytest tests that:
-1. Test correctness against PyTorch reference for each input shape
-2. Test edge cases (empty, single element, power-of-2 sizes)
-3. Test dtypes (fp16, bf16, f32 where applicable)
-4. Use pytest.mark.parametrize for shapes
-5. Assert torch.allclose with appropriate tolerances
+1. Import the kernel_fn from kernel.py
+2. Test correctness against PyTorch reference for each input shape
+3. Test edge cases (empty, single element, power-of-2 sizes)
+4. Test dtypes (fp16, bf16, f32 where applicable)
+5. Use pytest.mark.parametrize for shapes
+6. Assert torch.allclose with appropriate tolerances
+7. Run with: pytest test_kernel.py -v
 
-Output only the test code, no explanation.
+Output only raw Python test code — NO markdown, NO code blocks, NO explanations.
 """

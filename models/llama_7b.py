@@ -13,7 +13,6 @@ Usage:
     uv run profile.py --model models/llama_7b.py --class-name LlamaModel7B --input-shape 1,2048 --dtype float16
 """
 
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -132,10 +131,7 @@ class LlamaModel(nn.Module):
         super().__init__()
         self.tok_embeddings = nn.Embedding(vocab_size, dim)
         self.layers = nn.ModuleList(
-            [
-                TransformerBlock(dim, n_heads, n_kv_heads, hidden_dim)
-                for _ in range(n_layers)
-            ]
+            [TransformerBlock(dim, n_heads, n_kv_heads, hidden_dim) for _ in range(n_layers)]
         )
         self.norm = RMSNorm(dim)
         self.output = nn.Linear(dim, vocab_size, bias=False)
@@ -183,10 +179,7 @@ class LlamaModel7B(nn.Module):
         super().__init__()
         self.tok_embeddings = nn.Embedding(vocab_size, dim)
         self.layers = nn.ModuleList(
-            [
-                TransformerBlock(dim, n_heads, n_kv_heads, hidden_dim)
-                for _ in range(n_layers)
-            ]
+            [TransformerBlock(dim, n_heads, n_kv_heads, hidden_dim) for _ in range(n_layers)]
         )
         self.norm = RMSNorm(dim)
         self.output = nn.Linear(dim, vocab_size, bias=False)

@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 jobs:
   lint:
@@ -18,5 +20,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
-      - run: uv sync
-      - run: uv run pytest tests/ -x -q
+      - run: uv sync --extra testing --extra pipeline
+      - run: uv run pytest -m "not slow" -q --cov=autokernel --cov=scripts --cov-fail-under=70
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra testing --extra pipeline
+      - run: uv run bandit -r autokernel scripts -ll
+      - run: uv run gitleaks detect --source . --verbose
+      - run: systemd-analyze verify systemd/*.service systemd/*.timer || true

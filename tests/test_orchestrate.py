@@ -30,11 +30,7 @@ class TestOrchestrateCLI:
             timeout=30,
         )
         # Should not crash (returncode 0 or show status output)
-        assert (
-            result.returncode == 0
-            or "PENDING" in result.stdout
-            or "DONE" in result.stdout
-        )
+        assert result.returncode == 0 or "PENDING" in result.stdout or "DONE" in result.stdout
 
     def test_orchestrate_next(self):
         """orchestrate.py next retorna respuesta de decision."""
@@ -47,9 +43,7 @@ class TestOrchestrateCLI:
         )
         output = result.stdout + result.stderr
         valid_responses = ["NEXT:", "CONTINUE:", "DONE", "REVISIT:", "DECISION:"]
-        assert any(r in output for r in valid_responses), (
-            f"Respuesta inesperada: {output[:200]}"
-        )
+        assert any(r in output for r in valid_responses), f"Respuesta inesperada: {output[:200]}"
 
     def test_orchestrate_plan(self):
         """orchestrate.py plan muestra el plan de optimizacion."""

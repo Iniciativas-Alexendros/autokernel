@@ -4,10 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AutoKernel — Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.plot.ly/plotly-2.35.0.min.js"></script>
+  <meta name="description" content="Dashboard del pipeline de optimización autónoma de kernels GPU para RTX 5060">
+  <link rel="canonical" href="https://iniciativas-alexendros.github.io/autokernel/">
+  <meta property="og:title" content="AutoKernel — Dashboard">
+  <meta property="og:description" content="Pipeline de optimización autónoma de kernels GPU para RTX 5060">
+  <meta property="og:url" content="https://iniciativas-alexendros.github.io/autokernel/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="AutoKernel — Dashboard">
+  <meta name="twitter:description" content="Pipeline de optimización autónoma de kernels GPU para RTX 5060">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.plot.ly 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" defer crossorigin="anonymous"></script>
+  <script>
+    if (window.top !== window.self) { window.top.location = window.self.location; }
+  </script>
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Inter', -apple-system, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; }
@@ -39,22 +54,22 @@
     <div class="container">
       <h1>⚡ AutoKernel</h1>
       <p>Pipeline nocturno de optimización de kernels GPU — RTX 5060</p>
-      <p style="color:#64748b;font-size:0.8rem">Última actualización: 30 Jun 2026, 12:43 UTC</p>
+      <p style="color:#64748b;font-size:0.8rem">Última actualización: 01 Jul 2026, 17:37 UTC</p>
     </div>
   </div>
 
   <div class="container">
     <div class="stat-grid">
       <div class="stat-card">
-        <div class="value" style="color:#10b981">2</div>
+        <div class="value" style="color:#10b981">1</div>
         <div class="label">Completados</div>
       </div>
       <div class="stat-card">
-        <div class="value" style="color:#f59e0b">3</div>
+        <div class="value" style="color:#f59e0b">4</div>
         <div class="label">Pendientes</div>
       </div>
       <div class="stat-card">
-        <div class="value" style="color:#6366f1">1.32x</div>
+        <div class="value" style="color:#6366f1">1.42x</div>
         <div class="label">Speedup Medio</div>
       </div>
       <div class="stat-card">
@@ -66,7 +81,7 @@
         <div class="label">Tiempo Total</div>
       </div>
       <div class="stat-card">
-        <div class="value" style="color:#1e293b">0</div>
+        <div class="value" style="color:#1e293b">3</div>
         <div class="label">Modelos</div>
       </div>
     </div>
@@ -80,7 +95,25 @@
       <div class="section-title"><span class="icon">🎯</span> Modelos Objetivo</div>
       <table>
         <thead><tr><th>Modelo</th><th>Clase</th><th>Shape</th><th>Dtype</th></tr></thead>
-        <tbody><tr><td colspan="4" style="color:#94a3b8;text-align:center">Sin modelos configurados</td></tr></tbody>
+        <tbody>
+        <tr>
+          <td><code style="color:#6366f1">llama_7b</code></td>
+          <td>LlamaModel</td>
+          <td><code>1,512</code></td>
+          <td>float16</td>
+        </tr>
+        <tr>
+          <td><code style="color:#6366f1">phi3_mini</code></td>
+          <td>Phi3Mini</td>
+          <td><code>1,2048</code></td>
+          <td>float16</td>
+        </tr>
+        <tr>
+          <td><code style="color:#6366f1">bert_base</code></td>
+          <td>BertModel</td>
+          <td><code>8,512</code></td>
+          <td>float16</td>
+        </tr></tbody>
       </table>
     </div>
 
@@ -90,7 +123,7 @@
         <thead><tr><th>Estado</th><th>Tipo</th><th>Baseline</th><th>Mejor</th><th>Speedup</th><th>Exps</th><th>Conservados</th><th>Tiempo</th></tr></thead>
         <tbody>
         <tr>
-          <td><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:500;color:#fff;background:#10b981">completed</span></td>
+          <td><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:500;color:#fff;background:#6b7280">done</span></td>
           <td><code style="color:#6366f1">matmul</code></td>
           <td style="text-align:right">28.0</td>
           <td style="text-align:right">34.1</td>
@@ -100,7 +133,7 @@
           <td style="text-align:center">141m</td>
         </tr>
         <tr>
-          <td><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:500;color:#fff;background:#6b7280">pending</span></td>
+          <td><span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.75rem;font-weight:500;color:#fff;background:#f59e0b">optimizing</span></td>
           <td><code style="color:#6366f1">elementwise</code></td>
           <td style="text-align:right">—</td>
           <td style="text-align:right">—</td>
@@ -260,7 +293,7 @@
   <script>
     const kernels = ["matmul", "elementwise", "elementwise", "flash_attention", "elementwise"];
     const speedups = [1.218, 0, 0, 1.418, 0];
-    const colors = ["#10b981", "#d1d5db", "#d1d5db", "#10b981", "#d1d5db"];
+    const colors = ["#d1d5db", "#d1d5db", "#d1d5db", "#10b981", "#d1d5db"];
 
     if (kernels.length > 0) {
       Plotly.newPlot('speedup-chart', [{

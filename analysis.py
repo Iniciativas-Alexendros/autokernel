@@ -30,9 +30,7 @@ RESULTS_PATH = os.path.join(SCRIPT_DIR, "results.tsv")
 WORKSPACE_RESULTS_DIR = os.path.join(SCRIPT_DIR, "workspace", "results")
 PROGRESS_PNG = os.path.join(SCRIPT_DIR, "progress.png")
 REPORT_MD = os.path.join(SCRIPT_DIR, "report.md")
-BASELINES_PATH = os.path.join(
-    os.path.expanduser("~"), ".cache", "autokernel", "baselines.json"
-)
+BASELINES_PATH = os.path.join(os.path.expanduser("~"), ".cache", "autokernel", "baselines.json")
 
 # Expected TSV columns
 EXPECTED_COLUMNS = [
@@ -114,7 +112,7 @@ def load_results(path: str = "results.tsv") -> pd.DataFrame | None:
     missing = [c for c in EXPECTED_COLUMNS if c not in df.columns]
     extra = [c for c in df.columns if c not in EXPECTED_COLUMNS]
     if missing or extra:
-        print(f"WARNING: TSV columns do not match expected schema.")
+        print("WARNING: TSV columns do not match expected schema.")
         if missing:
             print(f"  Missing columns: {missing}")
         if extra:
@@ -282,9 +280,7 @@ def make_progress_plot(df: pd.DataFrame, baselines: dict | None) -> None:
 
     # Annotate top-3 improvements
     if xs_kept and ys_kept:
-        top_indices = sorted(
-            range(len(ys_kept)), key=lambda i: ys_kept[i], reverse=True
-        )[:3]
+        top_indices = sorted(range(len(ys_kept)), key=lambda i: ys_kept[i], reverse=True)[:3]
         for rank, idx in enumerate(top_indices):
             ax.annotate(
                 f"#{rank + 1}: {ys_kept[idx]:.2f}",
@@ -361,11 +357,7 @@ def print_terminal_summary(df: pd.DataFrame, baselines: dict | None) -> None:
         kernel_types = ["unknown"]
 
     for kt in kernel_types:
-        kt_df = (
-            df[df["kernel_type"].fillna("unknown") == kt]
-            if "kernel_type" in df.columns
-            else df
-        )
+        kt_df = df[df["kernel_type"].fillna("unknown") == kt] if "kernel_type" in df.columns else df
         print(f"\n  Kernel type: {kt}")
         print(f"  {'=' * 40}")
 
@@ -410,7 +402,7 @@ def print_terminal_summary(df: pd.DataFrame, baselines: dict | None) -> None:
             deltas.sort(key=lambda x: x[0], reverse=True)
 
             if deltas:
-                print(f"\n  Top 5 improvements:")
+                print("\n  Top 5 improvements:")
                 for rank, (delta, r) in enumerate(deltas[:5], 1):
                     desc = r.get("description", "no description")
                     tp = float(r.get("throughput_tflops", 0))
@@ -454,11 +446,7 @@ def generate_report(df: pd.DataFrame, baselines: dict | None) -> None:
         kernel_types = ["unknown"]
 
     for kt in kernel_types:
-        kt_df = (
-            df[df["kernel_type"].fillna("unknown") == kt]
-            if "kernel_type" in df.columns
-            else df
-        )
+        kt_df = df[df["kernel_type"].fillna("unknown") == kt] if "kernel_type" in df.columns else df
         classifications = kt_df.apply(classify_row, axis=1)
 
         lines.append(f"## Kernel: {kt}")
@@ -477,8 +465,8 @@ def generate_report(df: pd.DataFrame, baselines: dict | None) -> None:
 
         lines.append("### Summary")
         lines.append("")
-        lines.append(f"| Metric | Value |")
-        lines.append(f"|--------|-------|")
+        lines.append("| Metric | Value |")
+        lines.append("|--------|-------|")
         lines.append(f"| Total experiments | {n_total} |")
         lines.append(f"| Kept | {n_kept} |")
         lines.append(f"| Reverted | {n_reverted} |")
@@ -504,9 +492,7 @@ def generate_report(df: pd.DataFrame, baselines: dict | None) -> None:
                 if pd.notna(speedup) and isinstance(speedup, (int, float)):
                     speedup = f"{float(speedup):.2f}x"
                 tp_val = float(tp) if pd.notna(tp) else 0
-                lines.append(
-                    f"- **Exp {exp}**: {tp_val:.2f} TFLOPS (speedup: {speedup}) -- {desc}"
-                )
+                lines.append(f"- **Exp {exp}**: {tp_val:.2f} TFLOPS (speedup: {speedup}) -- {desc}")
             lines.append("")
 
         # Failed experiments
@@ -566,9 +552,7 @@ def generate_report(df: pd.DataFrame, baselines: dict | None) -> None:
         lines.append("### Suggestions for Next Session")
         lines.append("")
 
-        suggestions = _generate_suggestions(
-            kt_df, baseline_tp, best_tp, n_failed, n_total
-        )
+        suggestions = _generate_suggestions(kt_df, baseline_tp, best_tp, n_failed, n_total)
         for s in suggestions:
             lines.append(f"- {s}")
         lines.append("")
@@ -672,7 +656,7 @@ def main() -> None:
 
     # Single-row edge case
     if len(df) == 1:
-        print(f"Only 1 experiment recorded (baseline).")
+        print("Only 1 experiment recorded (baseline).")
         row = df.iloc[0]
         tp = row.get("throughput_tflops", "N/A")
         desc = row.get("description", "no description")

@@ -1,9 +1,7 @@
 import os
 import sys
-from pathlib import Path
 from unittest import mock
 
-import pytest
 
 REPO_ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, REPO_ROOT)
@@ -68,7 +66,9 @@ class TestGitHubPublisher:
             with mock.patch.object(publisher, "_git") as mock_git:
                 mock_git.return_value = (0, "main", "")
                 with mock.patch.object(publisher, "_create_pr") as mock_pr:
-                    mock_pr.return_value = "https://github.com/Iniciativas-Alexendros/autokernel/pull/42"
+                    mock_pr.return_value = (
+                        "https://github.com/Iniciativas-Alexendros/autokernel/pull/42"
+                    )
                     with mock.patch.object(publisher, "_enable_auto_merge") as mock_merge:
                         mock_merge.return_value = True
                         result = publisher.publish(

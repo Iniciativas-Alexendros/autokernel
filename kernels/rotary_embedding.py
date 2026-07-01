@@ -56,17 +56,15 @@ def rotary_embedding_kernel(
     # odd indices:  1, 3, 5, ... => col_offsets * 2 + 1
     x_row_base = X_ptr + row_idx * stride_x_row
     x1 = tl.load(x_row_base + col_offsets * 2, mask=mask_half, other=0.0).to(tl.float32)
-    x2 = tl.load(x_row_base + col_offsets * 2 + 1, mask=mask_half, other=0.0).to(
-        tl.float32
-    )
+    x2 = tl.load(x_row_base + col_offsets * 2 + 1, mask=mask_half, other=0.0).to(tl.float32)
 
     # Load cos and sin (shape [n_rows, half_dim])
-    cos = tl.load(
-        COS_ptr + row_idx * stride_cos_row + col_offsets, mask=mask_half, other=1.0
-    ).to(tl.float32)
-    sin = tl.load(
-        SIN_ptr + row_idx * stride_sin_row + col_offsets, mask=mask_half, other=0.0
-    ).to(tl.float32)
+    cos = tl.load(COS_ptr + row_idx * stride_cos_row + col_offsets, mask=mask_half, other=1.0).to(
+        tl.float32
+    )
+    sin = tl.load(SIN_ptr + row_idx * stride_sin_row + col_offsets, mask=mask_half, other=0.0).to(
+        tl.float32
+    )
 
     # Apply rotation
     rx1 = x1 * cos - x2 * sin

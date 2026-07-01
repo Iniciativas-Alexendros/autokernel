@@ -2,9 +2,12 @@
 """Generate AutoKernel HTML dashboard — professional, clean, clear design."""
 
 import json
+import logging
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def _load_state(workspace: Path) -> dict:
@@ -148,8 +151,8 @@ def generate_dashboard(workspace: Path, config_path: Path, output: Path) -> None
         for m in cfg.get("pipeline", {}).get("target_models", []):
             if m.get("enabled", True):
                 target_models.append(m)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("could not load target models from %s: %s", config_path, exc)
 
     models_rows = ""
     for m in target_models:
@@ -192,9 +195,7 @@ def generate_dashboard(workspace: Path, config_path: Path, output: Path) -> None
 
     plotly_kernels = [k.get("op_type", "?") for k in kernels]
     plotly_speedups = [k.get("speedup") or 0 for k in kernels]
-    plotly_colors = [
-        "#10b981" if k.get("status") == "completed" else "#d1d5db" for k in kernels
-    ]
+    plotly_colors = ["#10b981" if k.get("status") == "completed" else "#d1d5db" for k in kernels]
 
     html = f"""<!DOCTYPE html>
 <html lang="es">
@@ -202,10 +203,25 @@ def generate_dashboard(workspace: Path, config_path: Path, output: Path) -> None
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AutoKernel — Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.plot.ly/plotly-2.35.0.min.js"></script>
+  <meta name="description" content="Dashboard del pipeline de optimización autónoma de kernels GPU para RTX 5060">
+  <link rel="canonical" href="https://iniciativas-alexendros.github.io/autokernel/">
+  <meta property="og:title" content="AutoKernel — Dashboard">
+  <meta property="og:description" content="Pipeline de optimización autónoma de kernels GPU para RTX 5060">
+  <meta property="og:url" content="https://iniciativas-alexendros.github.io/autokernel/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="AutoKernel — Dashboard">
+  <meta name="twitter:description" content="Pipeline de optimización autónoma de kernels GPU para RTX 5060">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.plot.ly 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" defer crossorigin="anonymous"></script>
+  <script>
+    if (window.top !== window.self) {{ window.top.location = window.self.location; }}
+  </script>
   <style>
     * {{ box-sizing: border-box; }}
     body {{ font-family: 'Inter', -apple-system, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; }}

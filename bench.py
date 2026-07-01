@@ -20,17 +20,15 @@ from __future__ import annotations
 
 import argparse
 import importlib
-import math
 import os
 import signal
 import sys
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Tuple
 
 import torch
-import torch.nn.functional as F
 
 # ---------------------------------------------------------------------------
 # Timeout helper (cross-platform)
@@ -180,11 +178,7 @@ def detect_gpu() -> GPUSpec:
             # ROCm fallback: no clock_rate available
             peak_fp16 = 500.0  # conservative estimate
             peak_bw = 2000.0  # conservative estimate
-        l2 = (
-            props.L2_cache_size / (1024 * 1024)
-            if hasattr(props, "L2_cache_size")
-            else 0.0
-        )
+        l2 = props.L2_cache_size / (1024 * 1024) if hasattr(props, "L2_cache_size") else 0.0
 
     # Derive bf16 and fp32 from fp16
     # For Ampere/Hopper: bf16 ~ fp16, fp32 ~ fp16/2
@@ -209,9 +203,7 @@ def detect_gpu() -> GPUSpec:
 # =========================================================================
 
 
-def gen_matmul_inputs(
-    size: dict, dtype: torch.dtype, device: str, seed: int = 42
-) -> dict:
+def gen_matmul_inputs(size: dict, dtype: torch.dtype, device: str, seed: int = 42) -> dict:
     torch.manual_seed(seed)
     M, N, K = size["M"], size["N"], size["K"]
     A = torch.randn(M, K, device=device, dtype=dtype)
@@ -219,18 +211,14 @@ def gen_matmul_inputs(
     return {"A": A, "B": B}
 
 
-def gen_softmax_inputs(
-    size: dict, dtype: torch.dtype, device: str, seed: int = 42
-) -> dict:
+def gen_softmax_inputs(size: dict, dtype: torch.dtype, device: str, seed: int = 42) -> dict:
     torch.manual_seed(seed)
     rows, cols = size["rows"], size["cols"]
     x = torch.randn(rows, cols, device=device, dtype=dtype)
     return {"x": x}
 
 
-def gen_layernorm_inputs(
-    size: dict, dtype: torch.dtype, device: str, seed: int = 42
-) -> dict:
+def gen_layernorm_inputs(size: dict, dtype: torch.dtype, device: str, seed: int = 42) -> dict:
     torch.manual_seed(seed)
     batch, dim = size["batch"], size["dim"]
     x = torch.randn(batch, dim, device=device, dtype=dtype)
@@ -239,9 +227,7 @@ def gen_layernorm_inputs(
     return {"x": x, "weight": weight, "bias": bias}
 
 
-def gen_flash_attention_inputs(
-    size: dict, dtype: torch.dtype, device: str, seed: int = 42
-) -> dict:
+def gen_flash_attention_inputs(size: dict, dtype: torch.dtype, device: str, seed: int = 42) -> dict:
     torch.manual_seed(seed)
     batch, heads, seq_len, head_dim = (
         size["batch"],
@@ -255,9 +241,7 @@ def gen_flash_attention_inputs(
     return {"Q": Q, "K": K, "V": V}
 
 
-def gen_fused_mlp_inputs(
-    size: dict, dtype: torch.dtype, device: str, seed: int = 42
-) -> dict:
+def gen_fused_mlp_inputs(size: dict, dtype: torch.dtype, device: str, seed: int = 42) -> dict:
     torch.manual_seed(seed)
     batch, dim, hidden = size["batch"], size["dim"], size["hidden"]
     x = torch.randn(batch, dim, device=device, dtype=dtype)
@@ -267,9 +251,7 @@ def gen_fused_mlp_inputs(
     return {"x": x, "w_gate": w_gate, "w_up": w_up, "w_down": w_down}
 
 
-def gen_cross_entropy_inputs(
-    size: dict, dtype: torch.dtype, device: str, seed: int = 42
-) -> dict:
+def gen_cross_entropy_inputs(size: dict, dtype: torch.dtype, device: str, seed: int = 42) -> dict:
     torch.manual_seed(seed)
     batch, vocab = size["batch"], size["vocab"]
     logits = torch.randn(batch, vocab, device=device, dtype=dtype)
@@ -294,9 +276,7 @@ def gen_rotary_embedding_inputs(
     return {"x": x, "cos": cos, "sin": sin}
 
 
-def gen_rmsnorm_inputs(
-    size: dict, dtype: torch.dtype, device: str, seed: int = 42
-) -> dict:
+def gen_rmsnorm_inputs(size: dict, dtype: torch.dtype, device: str, seed: int = 42) -> dict:
     torch.manual_seed(seed)
     M, N = size["M"], size["N"]
     x = torch.randn(M, N, device=device, dtype=dtype)
@@ -304,9 +284,7 @@ def gen_rmsnorm_inputs(
     return {"x": x, "weight": weight}
 
 
-def gen_reduce_inputs(
-    size: dict, dtype: torch.dtype, device: str, seed: int = 42
-) -> dict:
+def gen_reduce_inputs(size: dict, dtype: torch.dtype, device: str, seed: int = 42) -> dict:
     torch.manual_seed(seed)
     M, N = size["M"], size["N"]
     x = torch.randn(M, N, device=device, dtype=dtype)
@@ -346,9 +324,7 @@ def _ref_flash_attention(inputs: dict) -> torch.Tensor:
 def _ref_fused_mlp(inputs: dict) -> torch.Tensor:
     import reference
 
-    return reference.fused_mlp_ref(
-        inputs["x"], inputs["w_gate"], inputs["w_up"], inputs["w_down"]
-    )
+    return reference.fused_mlp_ref(inputs["x"], inputs["w_gate"], inputs["w_up"], inputs["w_down"])
 
 
 def _ref_cross_entropy(inputs: dict) -> torch.Tensor:
@@ -381,9 +357,7 @@ def _ref_elementwise(inputs: dict) -> torch.Tensor:
     return reference.elementwise_ref(inputs["x"])
 
 
-def gen_elementwise_inputs(
-    size: dict, dtype: torch.dtype, device: str, seed: int = 42
-) -> dict:
+def gen_elementwise_inputs(size: dict, dtype: torch.dtype, device: str, seed: int = 42) -> dict:
     torch.manual_seed(seed)
     N = size["N"]
     x = torch.randn(N, device=device, dtype=dtype)
@@ -482,9 +456,7 @@ KERNEL_CONFIGS: Dict[str, Dict[str, Any]] = {
             torch.float32: {"atol": 1e-5, "rtol": 1e-5},
         },
         "flops_fn": lambda s: 5 * s["rows"] * s["cols"],  # exp + sub + sum + div + max
-        "bytes_fn": lambda s, dt: (
-            2 * s["rows"] * s["cols"] * _dtype_bytes(dt)
-        ),  # read + write
+        "bytes_fn": lambda s, dt: 2 * s["rows"] * s["cols"] * _dtype_bytes(dt),  # read + write
         "input_generator": gen_softmax_inputs,
         "reference_fn": _ref_softmax,
         "edge_sizes": [
@@ -513,12 +485,8 @@ KERNEL_CONFIGS: Dict[str, Dict[str, Any]] = {
             torch.bfloat16: {"atol": 2e-3, "rtol": 2e-3},
             torch.float32: {"atol": 1e-5, "rtol": 1e-5},
         },
-        "flops_fn": lambda s: (
-            8 * s["batch"] * s["dim"]
-        ),  # mean, var, norm, scale, shift
-        "bytes_fn": lambda s, dt: (
-            (2 * s["batch"] * s["dim"] + 2 * s["dim"]) * _dtype_bytes(dt)
-        ),
+        "flops_fn": lambda s: 8 * s["batch"] * s["dim"],  # mean, var, norm, scale, shift
+        "bytes_fn": lambda s, dt: (2 * s["batch"] * s["dim"] + 2 * s["dim"]) * _dtype_bytes(dt),
         "input_generator": gen_layernorm_inputs,
         "reference_fn": _ref_layernorm,
         "edge_sizes": [
@@ -547,16 +515,9 @@ KERNEL_CONFIGS: Dict[str, Dict[str, Any]] = {
             torch.float32: {"atol": 1e-4, "rtol": 1e-4},
         },
         # 4*N*S^2*D FLOPs (Q@K^T + softmax + attn@V)
-        "flops_fn": lambda s: (
-            4 * s["batch"] * s["heads"] * (s["seq_len"] ** 2) * s["head_dim"]
-        ),
+        "flops_fn": lambda s: 4 * s["batch"] * s["heads"] * (s["seq_len"] ** 2) * s["head_dim"],
         "bytes_fn": lambda s, dt: (
-            3
-            * s["batch"]
-            * s["heads"]
-            * s["seq_len"]
-            * s["head_dim"]
-            * _dtype_bytes(dt)
+            3 * s["batch"] * s["heads"] * s["seq_len"] * s["head_dim"] * _dtype_bytes(dt)
             + s["batch"] * s["heads"] * s["seq_len"] * s["head_dim"] * _dtype_bytes(dt)
         ),
         "input_generator": gen_flash_attention_inputs,
@@ -619,9 +580,7 @@ KERNEL_CONFIGS: Dict[str, Dict[str, Any]] = {
         },
         # log_softmax + nll
         "flops_fn": lambda s: 4 * s["batch"] * s["vocab"],
-        "bytes_fn": lambda s, dt: (
-            (s["batch"] * s["vocab"] + s["batch"]) * _dtype_bytes(dt)
-        ),
+        "bytes_fn": lambda s, dt: (s["batch"] * s["vocab"] + s["batch"]) * _dtype_bytes(dt),
         "input_generator": gen_cross_entropy_inputs,
         "reference_fn": _ref_cross_entropy,
         "edge_sizes": [
@@ -649,9 +608,7 @@ KERNEL_CONFIGS: Dict[str, Dict[str, Any]] = {
             torch.float32: {"atol": 1e-5, "rtol": 1e-5},
         },
         # mul + add per element, x2 (cos and sin parts)
-        "flops_fn": lambda s: (
-            6 * s["batch"] * s["heads"] * s["seq_len"] * s["head_dim"]
-        ),
+        "flops_fn": lambda s: 6 * s["batch"] * s["heads"] * s["seq_len"] * s["head_dim"],
         "bytes_fn": lambda s, dt: (
             (
                 s["batch"] * s["heads"] * s["seq_len"] * s["head_dim"] * 2
@@ -726,9 +683,7 @@ KERNEL_CONFIGS: Dict[str, Dict[str, Any]] = {
 # =========================================================================
 
 
-def _compare(
-    output: torch.Tensor, expected: torch.Tensor, atol: float, rtol: float
-) -> dict:
+def _compare(output: torch.Tensor, expected: torch.Tensor, atol: float, rtol: float) -> dict:
     """Compare two tensors and return statistics."""
     if output.shape != expected.shape:
         return {
@@ -802,9 +757,9 @@ def run_correctness(kernel_fn: Callable, config: dict, quick: bool = False) -> d
 
         if _has_nan_inf(output):
             results["smoke_test"] = "FAIL"
-            details.append(f"  smoke: NaN/Inf in output")
+            details.append("  smoke: NaN/Inf in output")
             all_pass = False
-            print(f"  FAIL: NaN/Inf in output")
+            print("  FAIL: NaN/Inf in output")
         else:
             tol = tols.get(dtype0, {"atol": 1e-2, "rtol": 1e-2})
             cmp = _compare(output, expected, **tol)
@@ -836,7 +791,7 @@ def run_correctness(kernel_fn: Callable, config: dict, quick: bool = False) -> d
     if results["smoke_test"] == "FAIL":
         results["correctness"] = "FAIL"
         results["details"] = details
-        print(f"\ncorrectness: FAIL (smoke test failed, aborting remaining stages)")
+        print("\ncorrectness: FAIL (smoke test failed, aborting remaining stages)")
         return results
 
     # ------------------------------------------------------------------
@@ -904,9 +859,7 @@ def run_correctness(kernel_fn: Callable, config: dict, quick: bool = False) -> d
         results["shape_sweep"] = (
             f"PASS ({sweep_count} configs, worst_err={worst_error:.2e} at {worst_case})"
         )
-        print(
-            f"  shape_sweep: PASS ({sweep_count} configs, worst_err={worst_error:.2e})"
-        )
+        print(f"  shape_sweep: PASS ({sweep_count} configs, worst_err={worst_error:.2e})")
     else:
         results["shape_sweep"] = f"FAIL ({sweep_fail_count}/{sweep_count} failed)"
         all_pass = False
@@ -921,9 +874,7 @@ def run_correctness(kernel_fn: Callable, config: dict, quick: bool = False) -> d
         results["edge_cases"] = "SKIP (quick mode)"
         results["correctness"] = "PASS" if all_pass else "FAIL"
         results["details"] = details
-        print(
-            f"\ncorrectness: {results['correctness']} (quick mode: stages 3-5 skipped)"
-        )
+        print(f"\ncorrectness: {results['correctness']} (quick mode: stages 3-5 skipped)")
         return results
 
     # ------------------------------------------------------------------
@@ -1039,9 +990,7 @@ def run_correctness(kernel_fn: Callable, config: dict, quick: bool = False) -> d
                 details.append(
                     f"  determinism: run 0 vs run {i} differ (max_diff={diff.max().item():.6e})"
                 )
-                print(
-                    f"  FAIL: run 0 vs run {i} differ (max_diff={diff.max().item():.6e})"
-                )
+                print(f"  FAIL: run 0 vs run {i} differ (max_diff={diff.max().item():.6e})")
 
         if determinism_pass:
             print("  PASS: 3 runs are bitwise identical")
@@ -1083,9 +1032,7 @@ def run_correctness(kernel_fn: Callable, config: dict, quick: bool = False) -> d
                         tol = tols.get(dtype, {"atol": 1e-2, "rtol": 1e-2})
                         cmp = _compare(output, expected, **tol)
                         if cmp["match"]:
-                            print(
-                                f"  PASS: {label} (max_err={cmp['max_abs_error']:.2e})"
-                            )
+                            print(f"  PASS: {label} (max_err={cmp['max_abs_error']:.2e})")
                         else:
                             edge_pass = False
                             details.append(f"  edge {label}: {cmp['reason']}")
@@ -1218,15 +1165,9 @@ def run_performance(
             # Compute metrics
             kernel_us = kernel_ms * 1000.0
             ref_us = ref_ms * 1000.0
-            throughput_tflops = (
-                flops / (kernel_ms / 1000.0) / 1e12 if kernel_ms > 0 else 0.0
-            )
-            bandwidth_gb_s = (
-                nbytes / (kernel_ms / 1000.0) / 1e9 if kernel_ms > 0 else 0.0
-            )
-            ref_throughput_tflops = (
-                flops / (ref_ms / 1000.0) / 1e12 if ref_ms > 0 else 0.0
-            )
+            throughput_tflops = flops / (kernel_ms / 1000.0) / 1e12 if kernel_ms > 0 else 0.0
+            bandwidth_gb_s = nbytes / (kernel_ms / 1000.0) / 1e9 if kernel_ms > 0 else 0.0
+            ref_throughput_tflops = flops / (ref_ms / 1000.0) / 1e12 if ref_ms > 0 else 0.0
 
             # Roofline analysis
             arithmetic_intensity = flops / nbytes if nbytes > 0 else 0.0
@@ -1396,9 +1337,7 @@ def main():
         action="store_true",
         help="Quick mode: skip correctness stages 3-5, bench only large size",
     )
-    parser.add_argument(
-        "--profile", action="store_true", help="Enable torch profiler trace"
-    )
+    parser.add_argument("--profile", action="store_true", help="Enable torch profiler trace")
     args = parser.parse_args()
 
     # ------------------------------------------------------------------
@@ -1427,35 +1366,33 @@ def main():
         if kernel_type is None:
             kernel_type = getattr(kernel_module, "KERNEL_TYPE", None)
             if kernel_type is None:
-                print(
-                    "ERROR: kernel.py has no KERNEL_TYPE attribute and --kernel not specified"
-                )
+                print("ERROR: kernel.py has no KERNEL_TYPE attribute and --kernel not specified")
                 sys.exit(1)
 
         print(f"kernel_type: {kernel_type}")
-        print(f"kernel_module: kernel.py loaded successfully")
+        print("kernel_module: kernel.py loaded successfully")
 
     except SyntaxError as e:
-        print(f"\nERROR: kernel.py has a syntax error:")
+        print("\nERROR: kernel.py has a syntax error:")
         print(f"  {e}")
         traceback.print_exc()
-        print(f"\ncorrectness: FAIL")
-        print(f"throughput_tflops: 0.000")
+        print("\ncorrectness: FAIL")
+        print("throughput_tflops: 0.000")
         sys.exit(1)
     except Exception as e:
-        print(f"\nERROR: Failed to import kernel.py:")
+        print("\nERROR: Failed to import kernel.py:")
         print(f"  {type(e).__name__}: {e}")
         traceback.print_exc()
-        print(f"\ncorrectness: FAIL")
-        print(f"throughput_tflops: 0.000")
+        print("\ncorrectness: FAIL")
+        print("throughput_tflops: 0.000")
         sys.exit(1)
 
     # Validate kernel type
     if kernel_type not in KERNEL_CONFIGS:
         print(f"\nERROR: Unknown kernel type '{kernel_type}'")
         print(f"  Available: {', '.join(KERNEL_CONFIGS.keys())}")
-        print(f"\ncorrectness: FAIL")
-        print(f"throughput_tflops: 0.000")
+        print("\ncorrectness: FAIL")
+        print("throughput_tflops: 0.000")
         sys.exit(1)
 
     config = KERNEL_CONFIGS[kernel_type]
@@ -1465,7 +1402,7 @@ def main():
     # ------------------------------------------------------------------
     gpu = detect_gpu()
 
-    print(f"\n=== GPU INFO ===")
+    print("\n=== GPU INFO ===")
     print(f"gpu_name: {gpu.name}")
     print(f"gpu_sm_count: {gpu.sm_count}")
     print(f"gpu_memory_gb: {gpu.memory_gb}")
@@ -1474,14 +1411,12 @@ def main():
     print(f"gpu_peak_tflops_fp32: {gpu.peak_tflops_fp32}")
     print(f"gpu_peak_bandwidth_gb_s: {gpu.peak_bandwidth_gb_s}")
     print(f"gpu_l2_cache_mb: {gpu.l2_cache_mb}")
-    print(
-        f"gpu_compute_capability: {gpu.compute_capability[0]}.{gpu.compute_capability[1]}"
-    )
+    print(f"gpu_compute_capability: {gpu.compute_capability[0]}.{gpu.compute_capability[1]}")
 
     # ------------------------------------------------------------------
     # Correctness
     # ------------------------------------------------------------------
-    print(f"\n=== CORRECTNESS ===")
+    print("\n=== CORRECTNESS ===")
     try:
         correctness_results = run_correctness(kernel_fn, config, quick=args.quick)
     except Exception as e:
@@ -1496,12 +1431,10 @@ def main():
             "edge_cases": "CRASH",
         }
 
-    print(f"\n--- Correctness Summary ---")
+    print("\n--- Correctness Summary ---")
     print(f"smoke_test: {correctness_results.get('smoke_test', 'N/A')}")
     print(f"shape_sweep: {correctness_results.get('shape_sweep', 'N/A')}")
-    print(
-        f"numerical_stability: {correctness_results.get('numerical_stability', 'N/A')}"
-    )
+    print(f"numerical_stability: {correctness_results.get('numerical_stability', 'N/A')}")
     print(f"determinism: {correctness_results.get('determinism', 'N/A')}")
     print(f"edge_cases: {correctness_results.get('edge_cases', 'N/A')}")
     print(f"correctness: {correctness_results['correctness']}")
@@ -1522,9 +1455,7 @@ def main():
         _perf_primary_label, _perf_primary_size = _perf_sizes[-1]
     _perf_dtype = config["test_dtypes"][0]
     _size_params = ", ".join(f"{k}={v}" for k, v in _perf_primary_size.items())
-    print(
-        f"\n=== PERFORMANCE ({_perf_primary_label}: {_size_params}, dtype={_perf_dtype}) ==="
-    )
+    print(f"\n=== PERFORMANCE ({_perf_primary_label}: {_size_params}, dtype={_perf_dtype}) ===")
 
     perf_results = {"primary": None, "all": []}
     peak_vram_mb = 0.0
@@ -1533,9 +1464,7 @@ def main():
         if args.quick:
             sizes_filter = "large"
         torch.cuda.reset_peak_memory_stats()
-        perf_results = run_performance(
-            kernel_fn, config, gpu, sizes_filter=sizes_filter
-        )
+        perf_results = run_performance(kernel_fn, config, gpu, sizes_filter=sizes_filter)
         peak_vram_mb = torch.cuda.max_memory_allocated() / 1024 / 1024
     except Exception as e:
         print(f"\nFATAL: Performance benchmarking crashed: {type(e).__name__}: {e}")
@@ -1557,7 +1486,7 @@ def main():
         print(f"bytes: {primary['bytes']}")
         print(f"peak_vram_mb: {peak_vram_mb:.1f}")
 
-        print(f"\n=== COMPARISON VS PYTORCH ===")
+        print("\n=== COMPARISON VS PYTORCH ===")
         print(f"pytorch_latency_us: {primary['pytorch_latency_us']:.2f}")
         print(f"pytorch_latency_ms: {primary['pytorch_latency_us'] / 1000.0:.4f}")
         print(f"kernel_latency_us: {primary['kernel_latency_us']:.2f}")
@@ -1566,26 +1495,26 @@ def main():
         print(f"pytorch_tflops: {primary['ref_throughput_tflops']:.3f}")
         print(f"kernel_tflops: {primary['throughput_tflops']:.3f}")
     else:
-        print(f"\nlatency_us: 0.00")
-        print(f"latency_ms: 0.0000")
-        print(f"throughput_tflops: 0.000")
-        print(f"bandwidth_gb_s: 0.0")
-        print(f"pct_peak_compute: 0.0%")
-        print(f"pct_peak_bandwidth: 0.0%")
+        print("\nlatency_us: 0.00")
+        print("latency_ms: 0.0000")
+        print("throughput_tflops: 0.000")
+        print("bandwidth_gb_s: 0.0")
+        print("pct_peak_compute: 0.0%")
+        print("pct_peak_bandwidth: 0.0%")
         print(f"peak_vram_mb: {peak_vram_mb:.1f}")
-        print(f"\n=== COMPARISON VS PYTORCH ===")
-        print(f"pytorch_latency_us: 0.00")
-        print(f"pytorch_latency_ms: 0.0000")
-        print(f"kernel_latency_us: 0.00")
-        print(f"kernel_latency_ms: 0.0000")
-        print(f"speedup_vs_pytorch: 0.000x")
+        print("\n=== COMPARISON VS PYTORCH ===")
+        print("pytorch_latency_us: 0.00")
+        print("pytorch_latency_ms: 0.0000")
+        print("kernel_latency_us: 0.00")
+        print("kernel_latency_ms: 0.0000")
+        print("speedup_vs_pytorch: 0.000x")
 
     # ------------------------------------------------------------------
     # All sizes summary table
     # ------------------------------------------------------------------
     all_perf = perf_results.get("all", [])
     if len(all_perf) > 1:
-        print(f"\n=== SIZE SWEEP ===")
+        print("\n=== SIZE SWEEP ===")
         print(
             f"{'size':<12} {'kernel_us':>12} {'pytorch_us':>12} {'speedup':>10} {'tflops':>10} {'%peak':>8}"
         )
@@ -1612,7 +1541,7 @@ def main():
     t_elapsed = time.time() - t_start
     throughput = primary["throughput_tflops"] if primary else 0.0
 
-    print(f"\n=== FINAL ===")
+    print("\n=== FINAL ===")
     print(f"kernel_type: {kernel_type}")
     print(f"correctness: {correctness_results['correctness']}")
     print(f"throughput_tflops: {throughput:.3f}")
@@ -1620,8 +1549,8 @@ def main():
         print(f"speedup_vs_pytorch: {primary['speedup_vs_pytorch']:.3f}x")
         print(f"pct_peak_compute: {primary['pct_peak_compute']:.1f}%")
     else:
-        print(f"speedup_vs_pytorch: 0.000x")
-        print(f"pct_peak_compute: 0.0%")
+        print("speedup_vs_pytorch: 0.000x")
+        print("pct_peak_compute: 0.0%")
     print(f"bench_time_seconds: {t_elapsed:.1f}")
 
     if t_elapsed > 90:

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Optional
 
 import aiohttp
 
@@ -38,7 +37,7 @@ def _read_proton_pass(vault: str, item: str, field: str = "password") -> str:
         return result.stdout.strip()
     except (FileNotFoundError, subprocess.CalledProcessError):
         # pass-cli not installed or failed, try env fallback
-        env_key = f"NEMOTRON_API_KEY"
+        env_key = "NEMOTRON_API_KEY"
         if env_key in os.environ:
             return os.environ[env_key]
         raise RuntimeError(
@@ -104,9 +103,7 @@ class NemotronClient:
     """Async client for Nemotron-3-Ultra via NVIDIA API."""
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or _read_proton_pass(
-            "Infraestructura", "NVIDIA", "APIkey"
-        )
+        self.api_key = api_key or _read_proton_pass("Infraestructura", "NVIDIA", "APIkey")
         self.base_url = NEMOTRON_API_URL
         self.model = NEMOTRON_MODEL
 

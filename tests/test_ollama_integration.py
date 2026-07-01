@@ -37,9 +37,7 @@ class TestOllamaHealth:
         """Modelo qwen2.5-coder:7b sigue disponible."""
         resp = requests.get(f"{OLLAMA_BASE}/api/tags", timeout=5)
         models = [m["name"] for m in resp.json().get("models", [])]
-        assert any("qwen2.5-coder" in m for m in models), (
-            f"Modelos disponibles: {models}"
-        )
+        assert any("qwen2.5-coder" in m for m in models), f"Modelos disponibles: {models}"
 
     def test_model_loaded(self):
         """Al menos un modelo esta cargado en VRAM."""

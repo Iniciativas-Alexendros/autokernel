@@ -10,23 +10,20 @@ Models:
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import subprocess
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import ollama as ollama_client
 
-try:
-    import aiohttp
-except ImportError:
-    aiohttp = None
-
 from autokernel.nemotron_client import NemotronClient, ReviewResult
 from autokernel.rag_index import RAGIndex
+
+logger = logging.getLogger(__name__)
 
 SCRIPT_DIR = Path(__file__).parent.parent
 
@@ -211,13 +208,17 @@ class LLMAssistant:
             )
             return result.stdout.strip()
         except Exception:
-            raise RuntimeError(
-                "OPENROUTER_API_KEY not found in environment or Proton Pass"
-            )
+            raise RuntimeError("OPENROUTER_API_KEY not found in environment or Proton Pass")
 
     def _call_api(self, model: str, messages: list[dict[str, str]]) -> str:
         """Call remote API (OpenRouter) for opencode models."""
+        import urllib.error
+        import urllib.parse
         import urllib.request
+
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        if urllib.parse.urlparse(url).scheme != "https":
+            raise ValueError("only https URLs are allowed for OpenRouter")
 
         api_key = self._read_openrouter_key()
         payload = json.dumps(
@@ -229,7 +230,7 @@ class LLMAssistant:
             }
         ).encode("utf-8")
         req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/chat/completions",
+            url,
             data=payload,
             headers={
                 "Authorization": f"Bearer {api_key}",
@@ -238,7 +239,7 @@ class LLMAssistant:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
+            with urllib.request.urlopen(req, timeout=120) as resp:  # nosec B310
                 data = json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             body = e.read().decode("utf-8", errors="ignore")[:500]
@@ -258,9 +259,7 @@ class LLMAssistant:
         if self._current_model != model:
             self._switch_model(model)
 
-        resp = ollama_client.chat(
-            model=model, messages=messages, options={"temperature": 0.1}
-        )
+        resp = ollama_client.chat(model=model, messages=messages, options={"temperature": 0.1})
         return resp["message"]["content"]
 
     def _switch_model(self, model: str):
@@ -268,8 +267,8 @@ class LLMAssistant:
         if self._current_model:
             try:
                 ollama_client.stop(self._current_model)
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("ollama stop failed for %s: %s", self._current_model, exc)
         self._current_model = model
 
     # ------------------------------------------------------------------
@@ -278,9 +277,7 @@ class LLMAssistant:
 
     def generate_spec(self, kernel_type: str, profile_data: dict) -> Spec:
         """Generate optimization spec using planner model + RAG context."""
-        context = self.rag.query(
-            f"Triton {kernel_type} optimization Blackwell SM12.0", k=5
-        )
+        context = self.rag.query(f"Triton {kernel_type} optimization Blackwell SM12.0", k=5)
         context_text = "\n\n".join(
             f"--- {c.source} (score={c.metadata.get('score', 0):.2f}) ---\n{c.text}"
             for c in context

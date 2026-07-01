@@ -37,9 +37,7 @@ def cross_entropy_kernel(
     mask = col_offsets < n_cols
 
     # Load logits row in float32
-    logits = tl.load(row_start + col_offsets, mask=mask, other=float("-inf")).to(
-        tl.float32
-    )
+    logits = tl.load(row_start + col_offsets, mask=mask, other=float("-inf")).to(tl.float32)
 
     # Numerically stable log-softmax
     # Step 1: find max

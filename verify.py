@@ -25,7 +25,6 @@ import inspect
 import json
 import os
 import sys
-import time
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -121,8 +120,7 @@ def load_model_from_file(model_path: str, class_name: str, **kwargs) -> nn.Modul
     if not hasattr(mod, class_name):
         available = [n for n in dir(mod) if not n.startswith("_")]
         raise AttributeError(
-            f"Class '{class_name}' not found in {model_path}. "
-            f"Available names: {available}"
+            f"Class '{class_name}' not found in {model_path}. Available names: {available}"
         )
 
     cls = getattr(mod, class_name)
@@ -137,14 +135,10 @@ def load_model_from_module(
     try:
         mod = importlib.import_module(module_name)
     except ImportError as e:
-        raise ImportError(
-            f"Cannot import module '{module_name}'. Is it installed? Error: {e}"
-        )
+        raise ImportError(f"Cannot import module '{module_name}'. Is it installed? Error: {e}")
 
     if not hasattr(mod, class_name):
-        raise AttributeError(
-            f"Class '{class_name}' not found in module '{module_name}'."
-        )
+        raise AttributeError(f"Class '{class_name}' not found in module '{module_name}'.")
 
     cls = getattr(mod, class_name)
 
@@ -181,9 +175,7 @@ def load_model(args) -> nn.Module:
             args.module, args.class_name, pretrained=args.pretrained, **extra_kwargs
         )
     else:
-        raise ValueError(
-            "Must specify either --model (file path) or --module (Python module)"
-        )
+        raise ValueError("Must specify either --model (file path) or --module (Python module)")
 
     model = model.to(dtype=dtype)
 
@@ -192,9 +184,7 @@ def load_model(args) -> nn.Module:
             model = model.cuda()
         except RuntimeError as e:
             if "out of memory" in str(e).lower():
-                print(
-                    f"WARNING: OOM moving model to GPU. Trying with smaller footprint..."
-                )
+                print("WARNING: OOM moving model to GPU. Trying with smaller footprint...")
                 torch.cuda.empty_cache()
                 model = model.half().cuda()
             else:
@@ -357,9 +347,7 @@ def discover_optimized_kernels() -> List[KernelReplacement]:
                     opt_path = os.path.join(WORKSPACE_DIR, f"{stem}_optimized.py")
                 else:
                     # Fallback convention: workspace/kernel_{type}_{rank}_optimized.py
-                    opt_path = os.path.join(
-                        WORKSPACE_DIR, f"kernel_{ktype}_{rank}_optimized.py"
-                    )
+                    opt_path = os.path.join(WORKSPACE_DIR, f"kernel_{ktype}_{rank}_optimized.py")
 
             if os.path.exists(opt_path) and speedup > 1.0:
                 replacements.append(
@@ -541,9 +529,7 @@ class OptimizedModelContext:
             try:
                 kernel_mod = load_kernel_module(repl.optimized_path)
                 if not hasattr(kernel_mod, "kernel_fn"):
-                    print(
-                        f"  WARNING: {repl.optimized_path} has no kernel_fn, skipping"
-                    )
+                    print(f"  WARNING: {repl.optimized_path} has no kernel_fn, skipping")
                     continue
                 repl.module_fn = kernel_mod.kernel_fn
             except Exception as e:
@@ -660,7 +646,6 @@ class OptimizedModelContext:
         Replace F.scaled_dot_product_attention globally with optimized kernel.
         Uses monkey-patching to intercept all calls.
         """
-        import torch.nn.functional as F
 
         original_fn = F.scaled_dot_product_attention
         optimized_fn = repl.module_fn
@@ -675,9 +660,7 @@ class OptimizedModelContext:
 
         F.scaled_dot_product_attention = patched_sdpa
         self._original_sdpa = original_fn  # Save for potential restoration
-        print(
-            f"  Patched F.scaled_dot_product_attention with optimized flash attention kernel"
-        )
+        print("  Patched F.scaled_dot_product_attention with optimized flash attention kernel")
         return 1  # Count as 1 replacement (global patch)
 
     @property
@@ -748,9 +731,7 @@ def compare_outputs(
 
     if not result["shapes_match"]:
         result["correctness"] = "FAIL"
-        result["reason"] = (
-            f"Shape mismatch: ref={result['ref_shape']}, opt={result['opt_shape']}"
-        )
+        result["reason"] = f"Shape mismatch: ref={result['ref_shape']}, opt={result['opt_shape']}"
         return result
 
     # NaN / Inf check
@@ -792,9 +773,7 @@ def compare_outputs(
 
     # Use allclose on the valid (non-NaN) elements
     if valid_mask.any():
-        passes = torch.allclose(
-            ref_float[valid_mask], opt_float[valid_mask], atol=atol, rtol=rtol
-        )
+        passes = torch.allclose(ref_float[valid_mask], opt_float[valid_mask], atol=atol, rtol=rtol)
     else:
         passes = True
 
@@ -885,9 +864,7 @@ def diagnose_kernel_failures(
 # ---------------------------------------------------------------------------
 
 
-def format_report(
-    result: VerificationResult, diagnose_results: Optional[List] = None
-) -> str:
+def format_report(result: VerificationResult, diagnose_results: Optional[List] = None) -> str:
     """Format the verification result into a human-readable report."""
     lines = []
     lines.append("")
@@ -909,9 +886,7 @@ def format_report(
     if result.kernels_replaced:
         lines.append("Kernels replaced:")
         for k in result.kernels_replaced:
-            lines.append(
-                f"  {k['type']} (rank {k['rank']}): {k['speedup']:.1f}x -> {k['path']}"
-            )
+            lines.append(f"  {k['type']} (rank {k['rank']}): {k['speedup']:.1f}x -> {k['path']}")
     else:
         lines.append("Kernels replaced: none")
     lines.append(f"Output shape: {result.opt_output_shape}")
@@ -1007,9 +982,7 @@ def _parse_dtype(dtype_str: str) -> torch.dtype:
     }
     key = dtype_str.lower().strip()
     if key not in mapping:
-        raise ValueError(
-            f"Unknown dtype '{dtype_str}'. Choose from: {list(mapping.keys())}"
-        )
+        raise ValueError(f"Unknown dtype '{dtype_str}'. Choose from: {list(mapping.keys())}")
     return mapping[key]
 
 
@@ -1048,9 +1021,7 @@ def main() -> None:
     model_group.add_argument(
         "--model", type=str, help="Path to a Python file containing the model class"
     )
-    model_group.add_argument(
-        "--module", type=str, help="Python module name (e.g. 'transformers')"
-    )
+    model_group.add_argument("--module", type=str, help="Python module name (e.g. 'transformers')")
 
     parser.add_argument(
         "--class-name",
@@ -1092,12 +1063,8 @@ def main() -> None:
     )
 
     # Tolerance overrides
-    parser.add_argument(
-        "--atol", type=float, default=None, help="Override absolute tolerance"
-    )
-    parser.add_argument(
-        "--rtol", type=float, default=None, help="Override relative tolerance"
-    )
+    parser.add_argument("--atol", type=float, default=None, help="Override absolute tolerance")
+    parser.add_argument("--rtol", type=float, default=None, help="Override relative tolerance")
 
     # Modes
     parser.add_argument(
@@ -1186,9 +1153,7 @@ def main() -> None:
             for k, v in model_input.items():
                 print(f"  {k}: shape={list(v.shape)}, dtype={v.dtype}")
         else:
-            print(
-                f"  Input: shape={list(model_input.shape)}, dtype={model_input.dtype}"
-            )
+            print(f"  Input: shape={list(model_input.shape)}, dtype={model_input.dtype}")
     except Exception as e:
         print(f"\nERROR: Failed to create input: {e}")
         traceback.print_exc()
@@ -1200,16 +1165,14 @@ def main() -> None:
     # -----------------------------------------------------------------------
     print("Step 4: Reference run (original PyTorch ops)...")
     try:
-        ref_output, ref_latency = benchmark_model(
-            model, model_input, WARMUP_RUNS, TIMED_RUNS
-        )
+        ref_output, ref_latency = benchmark_model(model, model_input, WARMUP_RUNS, TIMED_RUNS)
         ref_tensor = extract_tensor(ref_output)
         ref_shape_str = str(list(ref_tensor.shape))
         print(f"  Output shape: {ref_shape_str}")
         print(f"  Median latency: {ref_latency:.1f} ms")
     except RuntimeError as e:
         if "out of memory" in str(e).lower():
-            print(f"\nERROR: GPU out of memory during reference run.")
+            print("\nERROR: GPU out of memory during reference run.")
             print("  Try a smaller --input-shape or a smaller model.")
             torch.cuda.empty_cache()
             sys.exit(1)
@@ -1233,12 +1196,8 @@ def main() -> None:
                 for line in ctx.applied_summary:
                     print(f"  {line}")
             else:
-                print(
-                    "  WARNING: No kernel replacements could be applied to this model."
-                )
-                print(
-                    "  The model may not contain modules matching the optimized kernel types."
-                )
+                print("  WARNING: No kernel replacements could be applied to this model.")
+                print("  The model may not contain modules matching the optimized kernel types.")
 
             opt_output, opt_latency = benchmark_model(
                 patched_model, model_input, WARMUP_RUNS, TIMED_RUNS
@@ -1249,7 +1208,7 @@ def main() -> None:
             print(f"  Median latency: {opt_latency:.1f} ms")
     except RuntimeError as e:
         if "out of memory" in str(e).lower():
-            print(f"\nERROR: GPU out of memory during optimized run.")
+            print("\nERROR: GPU out of memory during optimized run.")
             print("  The optimized kernels may use more memory than expected.")
             torch.cuda.empty_cache()
             sys.exit(1)

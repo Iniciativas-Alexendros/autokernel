@@ -41,9 +41,7 @@ def reduce_sum_kernel(
     for offset in range(0, reduce_size, BLOCK_SIZE):
         col_offsets = offset + tl.arange(0, BLOCK_SIZE)
         mask = col_offsets < reduce_size
-        x = tl.load(row_start + col_offsets * stride_x_col, mask=mask, other=0.0).to(
-            tl.float32
-        )
+        x = tl.load(row_start + col_offsets * stride_x_col, mask=mask, other=0.0).to(tl.float32)
         acc += x
 
     result = tl.sum(acc, axis=0)

@@ -2,16 +2,26 @@
 
 from __future__ import annotations
 
-import json
-import os
+import logging
+import shutil
 import subprocess
-import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+logger = logging.getLogger(__name__)
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _resolve_bin(name: str, fallback: str) -> str:
+    path = shutil.which(name)
+    if path and Path(path).exists():
+        return path
+    if Path(fallback).exists():
+        return fallback
+    raise RuntimeError(f"{name} CLI no encontrado")
 
 
 @dataclass
@@ -34,8 +44,9 @@ class GitHubPublisher:
         self._ensure_gh()
 
     def _ensure_gh(self) -> None:
+        gh = _resolve_bin("gh", "/usr/bin/gh")
         result = subprocess.run(
-            ["gh", "--version"],
+            [gh, "--version"],
             capture_output=True,
             text=True,
             cwd=self.repo_dir,
@@ -54,7 +65,8 @@ class GitHubPublisher:
         return result.returncode, result.stdout, result.stderr
 
     def _git(self, args: list[str]) -> tuple[int, str, str]:
-        return self._run(["git"] + args)
+        git = _resolve_bin("git", "/usr/bin/git")
+        return self._run([git] + args)
 
     def _current_branch(self) -> str:
         _, out, _ = self._git(["branch", "--show-current"])
@@ -89,8 +101,9 @@ class GitHubPublisher:
         body: str,
         labels: list[str] | None = None,
     ) -> str:
+        gh = _resolve_bin("gh", "/usr/bin/gh")
         cmd = [
-            "gh",
+            gh,
             "pr",
             "create",
             "--title",
@@ -112,7 +125,8 @@ class GitHubPublisher:
         return url
 
     def _enable_auto_merge(self, branch: str) -> bool:
-        rc, _, err = self._run(["gh", "pr", "merge", branch, "--auto", "--squash"])
+        gh = _resolve_bin("gh", "/usr/bin/gh")
+        rc, _, err = self._run([gh, "pr", "merge", branch, "--auto", "--squash"])
         if rc != 0:
             # Auto-merge not always available; leave PR open
             return False
@@ -160,6 +174,7 @@ class GitHubPublisher:
 
             # Copy kernel and report
             import shutil
+
             shutil.copy2(kernel_path, dest_file)
             report_path = dest_dir / f"{kernel_type}_report.md"
             with open(report_path, "w") as f:
@@ -171,7 +186,7 @@ class GitHubPublisher:
 
             title = f"autokernel: optimize {kernel_type} for {model_name} (+{speedup:.2f}x)"
             body_lines = [
-                f"## AutoKernel Optimization Report",
+                "## AutoKernel Optimization Report",
                 "",
                 f"- **Model**: {model_name}",
                 f"- **Kernel**: {kernel_type}",
@@ -193,14 +208,17 @@ class GitHubPublisher:
                 branch=branch,
                 pr_url=pr_url,
                 merged=merged,
-                message="PR creado" + (" y auto-merge habilitado" if merged else ", pendiente de merge"),
+                message="PR creado"
+                + (" y auto-merge habilitado" if merged else ", pendiente de merge"),
             )
         except Exception as exc:
             # Try to return to original branch
             try:
                 self._git(["checkout", original_branch])
-            except Exception:
-                pass
+            except Exception as checkout_exc:
+                logger.warning(
+                    "could not checkout original branch %s: %s", original_branch, checkout_exc
+                )
             return PublishResult(
                 success=False,
                 branch=branch,

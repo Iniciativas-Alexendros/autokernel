@@ -29,9 +29,7 @@ def layernorm_ref(
 
 
 # RMS Normalization
-def rmsnorm_ref(
-    x: torch.Tensor, weight: torch.Tensor, eps: float = 1e-6
-) -> torch.Tensor:
+def rmsnorm_ref(x: torch.Tensor, weight: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
     """RMS normalization."""
     rms = torch.sqrt(torch.mean(x**2, dim=-1, keepdim=True) + eps)
     return (x / rms) * weight
@@ -87,9 +85,7 @@ def cross_entropy_ref(logits: torch.Tensor, targets: torch.Tensor) -> torch.Tens
 
 
 # Rotary Position Embedding
-def rotary_embedding_ref(
-    x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor
-) -> torch.Tensor:
+def rotary_embedding_ref(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) -> torch.Tensor:
     """Apply rotary position embeddings."""
     x1 = x[..., ::2]
     x2 = x[..., 1::2]

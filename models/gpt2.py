@@ -31,9 +31,7 @@ class CausalSelfAttention(nn.Module):
         # Causal mask
         self.register_buffer(
             "bias",
-            torch.tril(torch.ones(block_size, block_size)).view(
-                1, 1, block_size, block_size
-            ),
+            torch.tril(torch.ones(block_size, block_size)).view(1, 1, block_size, block_size),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -131,9 +129,7 @@ class GPT2(nn.Module):
 
     def forward(self, input_ids: torch.Tensor) -> torch.Tensor:
         B, T = input_ids.size()
-        assert T <= self.block_size, (
-            f"Sequence length {T} exceeds block_size {self.block_size}"
-        )
+        assert T <= self.block_size, f"Sequence length {T} exceeds block_size {self.block_size}"
 
         pos = torch.arange(0, T, dtype=torch.long, device=input_ids.device)
 

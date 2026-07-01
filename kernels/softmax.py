@@ -41,9 +41,9 @@ def softmax_kernel(
         col_offsets = offset + tl.arange(0, BLOCK_SIZE)
         mask = col_offsets < n_cols
 
-        chunk = tl.load(
-            row_start_input + col_offsets, mask=mask, other=float("-inf")
-        ).to(tl.float32)
+        chunk = tl.load(row_start_input + col_offsets, mask=mask, other=float("-inf")).to(
+            tl.float32
+        )
 
         chunk_max = tl.max(tl.where(mask, chunk, float("-inf")), axis=0)
 
@@ -59,9 +59,9 @@ def softmax_kernel(
         col_offsets = offset + tl.arange(0, BLOCK_SIZE)
         mask = col_offsets < n_cols
 
-        chunk = tl.load(
-            row_start_input + col_offsets, mask=mask, other=float("-inf")
-        ).to(tl.float32)
+        chunk = tl.load(row_start_input + col_offsets, mask=mask, other=float("-inf")).to(
+            tl.float32
+        )
 
         result = tl.exp(chunk - running_max) / running_sum
         tl.store(row_start_output + col_offsets, result, mask=mask)

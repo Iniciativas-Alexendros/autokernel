@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -58,9 +56,7 @@ class RAGIndex:
             vectors.append(resp["embedding"])
         return np.array(vectors, dtype=np.float32)
 
-    def _chunk_text(
-        self, text: str, max_chars: int = 2000, overlap: int = 200
-    ) -> list[str]:
+    def _chunk_text(self, text: str, max_chars: int = 2000, overlap: int = 200) -> list[str]:
         """Split text into overlapping chunks for better retrieval."""
         if len(text) <= max_chars:
             return [text]
@@ -130,10 +126,7 @@ class RAGIndex:
         INDEX_DIR.mkdir(parents=True, exist_ok=True)
         if self.index is not None:
             faiss.write_index(self.index, str(INDEX_PATH))
-        metadata = [
-            {"text": d.text, "source": d.source, "metadata": d.metadata}
-            for d in self.docs
-        ]
+        metadata = [{"text": d.text, "source": d.source, "metadata": d.metadata} for d in self.docs]
         with open(METADATA_PATH, "w") as f:
             json.dump(metadata, f, indent=2)
 
@@ -147,8 +140,7 @@ class RAGIndex:
         with open(METADATA_PATH) as f:
             metadata = json.load(f)
         self.docs = [
-            Doc(text=m["text"], source=m["source"], metadata=m["metadata"])
-            for m in metadata
+            Doc(text=m["text"], source=m["source"], metadata=m["metadata"]) for m in metadata
         ]
         return True
 
@@ -163,9 +155,7 @@ def build_default_index():
         if py_file.name.startswith("_") or py_file.name == "__init__.py":
             continue
         text = py_file.read_text(encoding="utf-8", errors="ignore")
-        rag.add_document(
-            text, f"kernels/{py_file.name}", {"type": "kernel", "lang": "triton"}
-        )
+        rag.add_document(text, f"kernels/{py_file.name}", {"type": "kernel", "lang": "triton"})
 
     # CUDA templates
     cuda_dir = kernels_dir / "cuda"

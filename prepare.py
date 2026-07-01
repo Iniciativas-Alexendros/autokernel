@@ -225,17 +225,15 @@ def smoke_test() -> None:
             kernel_type = "unknown"
 
     if kernel_type != "matmul" and kernel_type != "unknown":
-        print(
-            f"  Kernel type is '{kernel_type}' (not matmul) -- skipping matmul smoke test."
-        )
-        print(f"  Smoke test: SKIP (kernel-type-specific smoke test not implemented)")
+        print(f"  Kernel type is '{kernel_type}' (not matmul) -- skipping matmul smoke test.")
+        print("  Smoke test: SKIP (kernel-type-specific smoke test not implemented)")
         print()
         return
 
     if kernel_type != "matmul":
         # kernel_type is "unknown" -- try the matmul smoke test but do not
         # fail hard if the calling convention does not match.
-        print(f"  Kernel type not declared -- attempting matmul smoke test...")
+        print("  Kernel type not declared -- attempting matmul smoke test...")
 
     # Import reference
     try:
@@ -258,7 +256,7 @@ def smoke_test() -> None:
     try:
         C_kernel = kernel.kernel_fn(A, B)
         torch.cuda.synchronize()
-        print(f"  Run kernel (tiny, fp16): ok")
+        print("  Run kernel (tiny, fp16): ok")
     except Exception as e:
         if kernel_type == "unknown":
             print(f"  Run kernel (tiny, fp16): SKIP (not a matmul kernel? error: {e})")
@@ -278,9 +276,7 @@ def smoke_test() -> None:
         print("  Correctness check: PASS")
     else:
         max_diff = (C_kernel - C_ref).abs().max().item()
-        print(
-            f"  Correctness check: FAIL (max diff = {max_diff:.6f}, atol={atol}, rtol={rtol})"
-        )
+        print(f"  Correctness check: FAIL (max diff = {max_diff:.6f}, atol={atol}, rtol={rtol})")
         # Don't exit -- let the user decide
 
     print()
@@ -331,9 +327,7 @@ def benchmark_baselines() -> dict:
                 "throughput_tflops": round(tflops, 3),
             }
 
-            print(
-                f"  matmul {size_name} {tag}: {tflops:.1f} TFLOPS ({latency_us:.2f} us)"
-            )
+            print(f"  matmul {size_name} {tag}: {tflops:.1f} TFLOPS ({latency_us:.2f} us)")
 
             # Free GPU memory
             del A, B

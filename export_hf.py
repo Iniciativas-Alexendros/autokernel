@@ -354,9 +354,7 @@ def _param_to_torch_schema(param_type: str, param_name: str) -> str:
 def _build_ops_schema(func: Dict[str, str]) -> str:
     """Build a torch.library ops.def() schema string for a function."""
     params = _parse_param_list(func["params"])
-    schema_params = ", ".join(
-        _param_to_torch_schema(ptype, pname) for ptype, pname in params
-    )
+    schema_params = ", ".join(_param_to_torch_schema(ptype, pname) for ptype, pname in params)
 
     ret = func["return_type"].strip()
     if "vector" in ret:
@@ -385,9 +383,7 @@ def generate_torch_binding_cpp(
     for func in functions:
         schema = _build_ops_schema(func)
         ops_lines.append(f'  ops.def("{schema}");')
-        ops_lines.append(
-            f'  ops.impl("{func["name"]}", torch::kCUDA, &{func["name"]});'
-        )
+        ops_lines.append(f'  ops.impl("{func["name"]}", torch::kCUDA, &{func["name"]});')
 
     ops_str = "\n".join(ops_lines)
 
@@ -534,13 +530,9 @@ def _export_cuda_kernel(
                 }
             ]
         else:
-            print(
-                "ERROR: Could not find any torch::Tensor-returning functions in CUDA source."
-            )
+            print("ERROR: Could not find any torch::Tensor-returning functions in CUDA source.")
             print("       The CUDA source should contain launcher functions like:")
-            print(
-                "         torch::Tensor my_kernel_cuda(torch::Tensor A, torch::Tensor B) { ... }"
-            )
+            print("         torch::Tensor my_kernel_cuda(torch::Tensor A, torch::Tensor B) { ... }")
             sys.exit(1)
 
     # Create directory structure (matches kernels-community convention)
@@ -561,9 +553,7 @@ def _export_cuda_kernel(
 
     # 2. Write build.toml
     build_toml_path = os.path.join(project_dir, "build.toml")
-    build_toml_content = generate_build_toml(
-        name, functions, backend="cuda", repo_id=repo_id
-    )
+    build_toml_content = generate_build_toml(name, functions, backend="cuda", repo_id=repo_id)
     with open(build_toml_path, "w", encoding="utf-8") as f:
         f.write(build_toml_content)
     print(f"  Created {os.path.relpath(build_toml_path, output_dir)}")
@@ -742,7 +732,7 @@ def export_kernel(
     backend = detect_backend(source)
     kernel_type = detect_kernel_type(source)
 
-    print(f"=== AutoKernel HuggingFace Kernels Export ===")
+    print("=== AutoKernel HuggingFace Kernels Export ===")
     print()
     print(f"  Kernel file:  {kernel_path}")
     print(f"  Backend:      {backend}")
@@ -855,13 +845,13 @@ def main() -> None:
         "--kernel",
         type=str,
         default=DEFAULT_KERNEL_PATH,
-        help=f"Path to the kernel file to export (default: kernel.py)",
+        help="Path to the kernel file to export (default: kernel.py)",
     )
     parser.add_argument(
         "--output",
         type=str,
         default=DEFAULT_OUTPUT_DIR,
-        help=f"Output directory for the HF Kernels project (default: workspace/hf_export/)",
+        help="Output directory for the HF Kernels project (default: workspace/hf_export/)",
     )
     parser.add_argument(
         "--repo-id",

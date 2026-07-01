@@ -305,9 +305,7 @@ def estimate_aggregate_speedup(kernels: list[dict]) -> float:
     return 1.0 / remaining_frac
 
 
-def _hypothetical_speedup(
-    kernels: list[dict], assumed_speedup: float, top_n: int
-) -> float:
+def _hypothetical_speedup(kernels: list[dict], assumed_speedup: float, top_n: int) -> float:
     """What-if analysis: if we achieve *assumed_speedup* on the top-N kernels by pct_total."""
     sorted_k = sorted(kernels, key=lambda k: k.get("pct_total", 0), reverse=True)
     remaining_frac = 1.0
@@ -396,15 +394,11 @@ def cmd_status(state: dict) -> None:
         print()
     elif current:
         kname = Path(current["file"]).name
-        print(
-            f"  Currently optimizing: {kname} (rank {current['rank']}, {current['op_type']})"
-        )
+        print(f"  Currently optimizing: {kname} (rank {current['rank']}, {current['op_type']})")
         exp_run = current["experiments_run"]
         exp_kept = current["experiments_kept"]
         minutes = current["time_spent_minutes"]
-        print(
-            f"  Progress: {exp_run} experiments ({exp_kept} kept), {minutes} min elapsed"
-        )
+        print(f"  Progress: {exp_run} experiments ({exp_kept} kept), {minutes} min elapsed")
 
         baseline = current["baseline_tflops"]
         best = current["best_tflops"]
@@ -466,9 +460,7 @@ def cmd_next(state: dict) -> None:
             return
         _transition_to(state, next_idx)
         save_state(state)
-        _print_next_decision(
-            state, kernels[next_idx], "Previous kernel already finished"
-        )
+        _print_next_decision(state, kernels[next_idx], "Previous kernel already finished")
         return
 
     # Evaluate move-on criteria for the current kernel
@@ -573,11 +565,7 @@ def cmd_record(
         target["consecutive_reverts"] += 1
 
     # Compute speedup
-    if (
-        target["baseline_tflops"]
-        and target["best_tflops"]
-        and target["baseline_tflops"] > 0
-    ):
+    if target["baseline_tflops"] and target["best_tflops"] and target["baseline_tflops"] > 0:
         target["speedup"] = round(target["best_tflops"] / target["baseline_tflops"], 3)
 
     # Update time_spent_minutes from started_at
@@ -619,9 +607,7 @@ def cmd_record(
         f"Recorded: {kname} exp #{target['experiments_run']} -> {tag_label} ({throughput_tflops:.2f} TFLOPS)"
     )
     if target["speedup"]:
-        print(
-            f"  Speedup: {target['speedup']:.2f}x | Best: {target['best_tflops']:.2f} TFLOPS"
-        )
+        print(f"  Speedup: {target['speedup']:.2f}x | Best: {target['best_tflops']:.2f} TFLOPS")
     if target["consecutive_reverts"] > 0 and not is_kept:
         print(
             f"  Consecutive reverts: {target['consecutive_reverts']}"
@@ -633,7 +619,7 @@ def cmd_report(state: dict) -> None:
     """Generate the aggregate report at workspace/aggregate_report.md."""
     _ensure_workspace()
     kernels = state["kernels"]
-    plan = load_plan()
+    load_plan()
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     lines: list[str] = []
@@ -654,9 +640,7 @@ def cmd_report(state: dict) -> None:
 
     for k in kernels:
         kname = Path(k["file"]).name
-        baseline_str = (
-            f"{k['baseline_tflops']:.2f}" if k["baseline_tflops"] is not None else "--"
-        )
+        baseline_str = f"{k['baseline_tflops']:.2f}" if k["baseline_tflops"] is not None else "--"
         best_str = f"{k['best_tflops']:.2f}" if k["best_tflops"] is not None else "--"
         speedup_str = f"{k['speedup']:.2f}x" if k["speedup"] is not None else "--"
         exp_run = k["experiments_run"]
@@ -720,9 +704,7 @@ def cmd_report(state: dict) -> None:
         if k["experiments_run"] > 0:
             rate = k["experiments_kept"] / k["experiments_run"] * 100
             kname = Path(k["file"]).name
-            lines.append(
-                f"- {kname}: {k['experiments_kept']}/{k['experiments_run']} ({rate:.0f}%)"
-            )
+            lines.append(f"- {kname}: {k['experiments_kept']}/{k['experiments_run']} ({rate:.0f}%)")
     lines.append("")
 
     # ---- Headroom analysis ----
@@ -744,17 +726,12 @@ def cmd_report(state: dict) -> None:
                 reasons.append(
                     f"speedup only {speedup:.2f}x (target: {MOVE_ON_CRITERIA['speedup_threshold']:.1f}x)"
                 )
-            if (
-                pct_peak is not None
-                and pct_peak < MOVE_ON_CRITERIA["pct_peak_threshold"]
-            ):
+            if pct_peak is not None and pct_peak < MOVE_ON_CRITERIA["pct_peak_threshold"]:
                 reasons.append(
                     f"only {pct_peak:.1f}% of peak (headroom to {MOVE_ON_CRITERIA['pct_peak_threshold']:.0f}%)"
                 )
             if pct_total >= 10 and (speedup is None or speedup < 1.5):
-                reasons.append(
-                    f"high impact ({pct_total:.1f}% of GPU time) with low speedup"
-                )
+                reasons.append(f"high impact ({pct_total:.1f}% of GPU time) with low speedup")
 
         if reasons:
             has_headroom = True
@@ -820,9 +797,7 @@ def cmd_plan(state: dict) -> None:
     print(
         f"  {'Rank':<5} {'Op Type':<20} {'Shape':<30} {'GPU Time (ms)':<15} {'% Total':<10} {'Status':<12} {'Speedup':<10}"
     )
-    print(
-        f"  {'-' * 5} {'-' * 20} {'-' * 30} {'-' * 15} {'-' * 10} {'-' * 12} {'-' * 10}"
-    )
+    print(f"  {'-' * 5} {'-' * 20} {'-' * 30} {'-' * 15} {'-' * 10} {'-' * 12} {'-' * 10}")
 
     for kp in kernels_plan:
         rank = kp.get("rank", "?")
@@ -864,9 +839,7 @@ def cmd_plan(state: dict) -> None:
             if n > len(kernels_state):
                 continue
             projected = _hypothetical_speedup(kernels_state, s, n)
-            print(
-                f"    If top-{n} kernels achieve {s:.1f}x -> model speedup: {projected:.2f}x"
-            )
+            print(f"    If top-{n} kernels achieve {s:.1f}x -> model speedup: {projected:.2f}x")
         print()
 
     # Current actual
@@ -922,9 +895,7 @@ def _parse_bench_output(text: str) -> dict:
                 pass
         elif line.startswith("speedup_vs_pytorch:"):
             try:
-                out["speedup_vs_pytorch"] = float(
-                    line.split(":", 1)[1].strip().rstrip("x")
-                )
+                out["speedup_vs_pytorch"] = float(line.split(":", 1)[1].strip().rstrip("x"))
             except ValueError:
                 pass
         elif line.startswith("latency_us:"):
@@ -934,16 +905,12 @@ def _parse_bench_output(text: str) -> dict:
                 pass
         elif line.startswith("pct_peak_compute:"):
             try:
-                out["pct_peak_compute"] = float(
-                    line.split(":", 1)[1].strip().rstrip("%")
-                )
+                out["pct_peak_compute"] = float(line.split(":", 1)[1].strip().rstrip("%"))
             except ValueError:
                 pass
         elif line.startswith("pct_peak_bandwidth:"):
             try:
-                out["pct_peak_bandwidth"] = float(
-                    line.split(":", 1)[1].strip().rstrip("%")
-                )
+                out["pct_peak_bandwidth"] = float(line.split(":", 1)[1].strip().rstrip("%"))
             except ValueError:
                 pass
         elif line.startswith("peak_vram_mb:"):
@@ -965,6 +932,7 @@ def _run_bench(kernel_path: str, quick: bool = False) -> dict:
     try:
         # Copy target kernel into the expected kernel.py location
         import shutil
+
         shutil.copy2(kernel_path, target)
     except Exception as exc:
         return {"error": f"failed to copy kernel to kernel.py: {exc}"}
@@ -1032,7 +1000,7 @@ async def cmd_auto(args) -> None:
     llm = LLMAssistant(planner_model=planner, coder_model=coder)
     sem = ResourceSemaphore()
     config = _load_pipeline_config()
-    criteria = config.get("pipeline", {})
+    config.get("pipeline", {})
 
     # Load or generate profile data
     profile_path = WORKSPACE / "profile_latest" / "profile_report.json"
@@ -1056,9 +1024,7 @@ async def cmd_auto(args) -> None:
             print(f"\n[TIMEOUT] {elapsed:.0f}s > {timeout}s, stopping.")
             break
 
-        print(
-            f"\n--- Iteration {iteration + 1}/{iterations} ({elapsed:.0f}s elapsed) ---"
-        )
+        print(f"\n--- Iteration {iteration + 1}/{iterations} ({elapsed:.0f}s elapsed) ---")
 
         # 1. Generate spec (first iteration or after NCU analysis)
         if spec is None or iteration == 2:
@@ -1086,9 +1052,7 @@ async def cmd_auto(args) -> None:
             timeout=60,
         )
         if test_result.returncode != 0:
-            print(
-                f"  Tests failed (expected during generation): {test_result.stderr[:200]}"
-            )
+            print(f"  Tests failed (expected during generation): {test_result.stderr[:200]}")
 
         # 3. Generate kernel
         print("[3/5] Generating kernel via LLM...")
@@ -1129,9 +1093,7 @@ async def cmd_auto(args) -> None:
                 ncu_analysis = llm.analyze_ncu(kernel_type, ncu_log)
             config_changes = ncu_analysis.get("config_changes", {})
             if config_changes:
-                print(
-                    f"  Suggested config changes: {json.dumps(config_changes, indent=2)}"
-                )
+                print(f"  Suggested config changes: {json.dumps(config_changes, indent=2)}")
                 # Apply config changes to spec
                 spec.config.update(config_changes)
 
@@ -1191,9 +1153,7 @@ async def cmd_migrate_cuda(args) -> None:
     # Validate the generated CUDA module is importable Python and has the kernel contract
     print("Validating CUDA kernel module...")
     try:
-        spec = importlib.util.spec_from_file_location(
-            f"kernel_{kernel_type}_cuda", output_path
-        )
+        spec = importlib.util.spec_from_file_location(f"kernel_{kernel_type}_cuda", output_path)
         if spec and spec.loader:
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
@@ -1283,34 +1243,20 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("next", help="Determine which kernel to optimize next")
 
     rec = sub.add_parser("record", help="Record an experiment result")
-    rec.add_argument(
-        "kernel_file", help="Kernel file path (e.g. workspace/kernel_matmul_1.py)"
-    )
+    rec.add_argument("kernel_file", help="Kernel file path (e.g. workspace/kernel_matmul_1.py)")
     rec.add_argument("throughput_tflops", type=float, help="Throughput in TFLOPS")
-    rec.add_argument(
-        "status", help="Experiment status: kept | revert | failed | crash | timeout"
-    )
+    rec.add_argument("status", help="Experiment status: kept | revert | failed | crash | timeout")
     rec.add_argument("description", help="Brief description of the experiment")
 
     sub.add_parser("report", help="Generate aggregate optimization report")
     sub.add_parser("plan", help="Show optimization plan with Amdahl's law analysis")
 
     # Auto mode: LLM-assisted optimization
-    auto = sub.add_parser(
-        "auto", help="Fully automated LLM-assisted kernel optimization"
-    )
-    auto.add_argument(
-        "--kernel", required=True, help="Kernel type (e.g. matmul, softmax)"
-    )
-    auto.add_argument(
-        "--llm-planner", default="ornith:9b", help="Ollama model for planning"
-    )
-    auto.add_argument(
-        "--llm-coder", default="qwen2.5-coder:7b", help="Ollama model for coding"
-    )
-    auto.add_argument(
-        "--iterations", type=int, default=5, help="Max optimization iterations"
-    )
+    auto = sub.add_parser("auto", help="Fully automated LLM-assisted kernel optimization")
+    auto.add_argument("--kernel", required=True, help="Kernel type (e.g. matmul, softmax)")
+    auto.add_argument("--llm-planner", default="ornith:9b", help="Ollama model for planning")
+    auto.add_argument("--llm-coder", default="qwen2.5-coder:7b", help="Ollama model for coding")
+    auto.add_argument("--iterations", type=int, default=5, help="Max optimization iterations")
     auto.add_argument("--timeout", type=int, default=1800, help="Timeout in seconds")
 
     # CUDA migration
@@ -1318,9 +1264,7 @@ def build_parser() -> argparse.ArgumentParser:
     cuda.add_argument("--kernel", required=True, help="Kernel type (e.g. matmul)")
     cuda.add_argument("--model", default="nemotron", help="Model to use for migration")
 
-    sub.add_parser(
-        "report-extended", help="Generate extended report with nightly metrics"
-    )
+    sub.add_parser("report-extended", help="Generate extended report with nightly metrics")
 
     # Publish a validated kernel to GitHub
     publish = sub.add_parser("publish", help="Publish validated kernel as GitHub PR")

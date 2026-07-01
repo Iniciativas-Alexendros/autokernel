@@ -53,12 +53,8 @@ def matmul_kernel(
     acc = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
 
     for k in range(0, K, BLOCK_SIZE_K):
-        a = tl.load(
-            a_ptrs, mask=(offs_m[:, None] < M) & (offs_k[None, :] < K), other=0.0
-        )
-        b = tl.load(
-            b_ptrs, mask=(offs_k[:, None] < K) & (offs_n[None, :] < N), other=0.0
-        )
+        a = tl.load(a_ptrs, mask=(offs_m[:, None] < M) & (offs_k[None, :] < K), other=0.0)
+        b = tl.load(b_ptrs, mask=(offs_k[:, None] < K) & (offs_n[None, :] < N), other=0.0)
         acc += tl.dot(a, b)
         a_ptrs += BLOCK_SIZE_K * stride_ak
         b_ptrs += BLOCK_SIZE_K * stride_bk

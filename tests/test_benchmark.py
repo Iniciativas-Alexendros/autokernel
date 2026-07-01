@@ -45,7 +45,6 @@ class TestKernelPerformance:
         """Kernel se puede importar sin errores de compilación."""
         if not os.path.exists(self.KERNEL_PATH):
             pytest.skip("Kernel no extraído aún")
-        import importlib.util
         import ast
 
         with open(self.KERNEL_PATH) as f:

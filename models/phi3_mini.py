@@ -12,7 +12,6 @@ Usage:
     uv run profile.py --model models/phi3_mini.py --class-name Phi3Mini --input-shape 1,2048 --dtype float16
 """
 
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
