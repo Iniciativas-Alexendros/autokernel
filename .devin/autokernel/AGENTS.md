@@ -20,8 +20,10 @@
 | `uv run python verify.py --model <path> --class-name <Name> --input-shape <shape>` | Verificación end-to-end |
 | `bash scripts/nightly_pipeline.sh` | Pipeline nocturno manual |
 | `uv run python scripts/generate_dashboard.py --workspace workspace --config config/pipeline.yaml --output docs/index.html` | Generar dashboard |
-| `uv run pytest -m "not slow"` | Tests unitarios/integración |
+| `uv run pytest -m "not slow" -q --cov=autokernel --cov=scripts --cov-fail-under=70` | Tests con cobertura mínima 70% |
 | `uv run pytest` | Todos los tests (incluye GPU) |
+| `uv run ruff check . && uv run ruff format --check .` | Lint y formato |
+| `uv run bandit -r autokernel scripts -ll && gitleaks detect --source .` | Seguridad básica |
 
 ## Convenciones
 
@@ -69,3 +71,15 @@ El fallback a `opencode/*` requiere `OPENROUTER_API_KEY` o token configurado en 
 - speedup end-to-end > 1.0x.
 - Pipeline continuo sin intervención humana > 24 h.
 - PRs automáticos validados por CI y reviewer.
+- Cobertura de tests ≥ 70% y sin issues de seguridad en bandit/gitleaks.
+
+## Propuestas de magnificación (evaluadas)
+
+| Prioridad | Propuesta | Impacto | Esfuerzo | Próximo paso |
+| --- | --- | --- | --- | --- |
+| 1 | Venderizar Bootstrap/Plotly/Inter y añadir SRI | Seguridad, offline | Medio | Descargar assets y generar hashes sha384 en CI. |
+| 2 | Hardening de URLs y añadir HSTS preload | Seguridad | Bajo | Audit redirects DNS y enviar dominio a hstspreload.org. |
+| 3 | Test suite de GPU reales (pytest slow) | Fiabilidad | Alto | Job CI auto-hospedado con runner que tenga RTX 5060. |
+| 4 | Alertas/métricas Prometheus + Grafana | Observabilidad | Medio | Exponer /metrics en continuous_pipeline y scrapear. |
+| 5 | Multi-GPU scheduling y cola prioritaria | Escalabilidad | Alto | Refactor ResourceSemaphore con semáforos por GPU. |
+| 6 | Auto-rollback de kernels con regresión | Robustez | Medio | Comparar verification_*.json y restaurar baseline. |
