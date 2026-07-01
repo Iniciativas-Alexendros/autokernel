@@ -26,6 +26,10 @@ run.log
 
 # Cache
 .cache/
+.pytest_cache/
+
+# Coverage
+.coverage
 
 # Analysis output (regenerated)
 report.md
