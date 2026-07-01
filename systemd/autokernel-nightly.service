@@ -8,7 +8,11 @@ Type=oneshot
 User=alexendros
 WorkingDirectory=/home/alexendros/repositorios/org-iniciativas-alexendros/autokernel
 Environment=PATH=/home/alexendros/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/alexendros
+ExecStartPre=/bin/sh -c 'command -v uv >/dev/null || { echo "uv no encontrado"; exit 1; }'
 ExecStart=/home/alexendros/repositorios/org-iniciativas-alexendros/autokernel/scripts/nightly_pipeline.sh
+StandardOutput=append:/home/alexendros/logs/autokernel-nightly.log
+StandardError=inherit
 TimeoutSec=21600
 Nice=10
 IOSchedulingClass=best-effort

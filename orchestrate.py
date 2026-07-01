@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib.util
 import json
 import os
 import subprocess
@@ -899,29 +900,92 @@ def _load_pipeline_config() -> dict:
         return {}
 
 
+def _parse_bench_output(text: str) -> dict:
+    """Parse structured output from bench.py stdout."""
+    out: dict[str, Any] = {
+        "correctness": "unknown",
+        "throughput_tflops": 0.0,
+        "speedup_vs_pytorch": 0.0,
+        "latency_us": 0.0,
+        "pct_peak_compute": 0.0,
+        "pct_peak_bandwidth": 0.0,
+        "peak_vram_mb": 0.0,
+    }
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("correctness:"):
+            out["correctness"] = line.split(":", 1)[1].strip()
+        elif line.startswith("throughput_tflops:"):
+            try:
+                out["throughput_tflops"] = float(line.split(":", 1)[1].strip())
+            except ValueError:
+                pass
+        elif line.startswith("speedup_vs_pytorch:"):
+            try:
+                out["speedup_vs_pytorch"] = float(
+                    line.split(":", 1)[1].strip().rstrip("x")
+                )
+            except ValueError:
+                pass
+        elif line.startswith("latency_us:"):
+            try:
+                out["latency_us"] = float(line.split(":", 1)[1].strip())
+            except ValueError:
+                pass
+        elif line.startswith("pct_peak_compute:"):
+            try:
+                out["pct_peak_compute"] = float(
+                    line.split(":", 1)[1].strip().rstrip("%")
+                )
+            except ValueError:
+                pass
+        elif line.startswith("pct_peak_bandwidth:"):
+            try:
+                out["pct_peak_bandwidth"] = float(
+                    line.split(":", 1)[1].strip().rstrip("%")
+                )
+            except ValueError:
+                pass
+        elif line.startswith("peak_vram_mb:"):
+            try:
+                out["peak_vram_mb"] = float(line.split(":", 1)[1].strip())
+            except ValueError:
+                pass
+    return out
+
+
 def _run_bench(kernel_path: str, quick: bool = False) -> dict:
-    """Run bench.py on a kernel and return parsed results."""
-    iterations = 2 if quick else 5
+    """Run bench.py on a kernel and return parsed results.
+
+    bench.py expects the kernel to be importable as `kernel.py` in the cwd,
+    so we copy the target kernel there before benchmarking.
+    """
+    kernel_path = Path(kernel_path).resolve()
+    target = SCRIPT_DIR / "kernel.py"
+    try:
+        # Copy target kernel into the expected kernel.py location
+        import shutil
+        shutil.copy2(kernel_path, target)
+    except Exception as exc:
+        return {"error": f"failed to copy kernel to kernel.py: {exc}"}
+
+    cmd = [sys.executable, str(SCRIPT_DIR / "bench.py")]
+    if quick:
+        cmd.append("--quick")
+
     result = subprocess.run(
-        [
-            sys.executable,
-            str(SCRIPT_DIR / "bench.py"),
-            "--kernel",
-            kernel_path,
-            "--iterations",
-            str(iterations),
-            "--output",
-            str(WORKSPACE / "bench_tmp.json"),
-        ],
+        cmd,
         capture_output=True,
         text=True,
         timeout=300,
+        cwd=SCRIPT_DIR,
     )
-    bench_path = WORKSPACE / "bench_tmp.json"
-    if bench_path.exists():
-        with open(bench_path) as f:
-            return json.load(f)
-    return {"error": result.stderr[:500] if result.stderr else "bench failed"}
+    if result.returncode != 0:
+        return {
+            "error": result.stderr[:500] if result.stderr else "bench failed",
+            **_parse_bench_output(result.stdout),
+        }
+    return _parse_bench_output(result.stdout)
 
 
 def _run_ncu(kernel_path: str) -> str:
@@ -950,7 +1014,6 @@ def _run_ncu(kernel_path: str) -> str:
 
 async def cmd_auto(args) -> None:
     """Fully automated LLM-assisted kernel optimization."""
-    import ollama as ollama_client
     from autokernel.llm_assistant import LLMAssistant, Spec
     from autokernel.semaphore import ResourceSemaphore
 
@@ -977,6 +1040,9 @@ async def cmd_auto(args) -> None:
     if profile_path.exists():
         with open(profile_path) as f:
             profile_data = json.load(f)
+
+    # Single state instance for the whole run
+    state = get_or_create_state()
 
     best_kernel = None
     best_tflops = 0.0
@@ -1047,7 +1113,7 @@ async def cmd_auto(args) -> None:
             best_tflops = tflops
             # Record in orchestration
             cmd_record(
-                get_or_create_state(),
+                state,
                 str(kernel_path),
                 tflops,
                 "kept",
@@ -1122,21 +1188,22 @@ async def cmd_migrate_cuda(args) -> None:
         f.write(cuda_code)
     print(f"CUDA kernel saved: {output_path}")
 
-    # Try to compile
-    print("Attempting compilation...")
-    compile_result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            f"import py_compile; py_compile.compile('{output_path}', doraise=True)",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if compile_result.returncode == 0:
-        print("Compilation: OK")
-    else:
-        print(f"Compilation: FAILED - {compile_result.stderr[:300]}")
+    # Validate the generated CUDA module is importable Python and has the kernel contract
+    print("Validating CUDA kernel module...")
+    try:
+        spec = importlib.util.spec_from_file_location(
+            f"kernel_{kernel_type}_cuda", output_path
+        )
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            assert hasattr(mod, "KERNEL_TYPE"), "missing KERNEL_TYPE"
+            assert hasattr(mod, "kernel_fn"), "missing kernel_fn"
+            print("Validation: OK")
+        else:
+            print("Validation: FAILED - could not load module spec")
+    except Exception as exc:
+        print(f"Validation: FAILED - {exc}")
 
 
 def cmd_report_extended(state: dict) -> None:

@@ -14,6 +14,10 @@ worktrees/
 CLAUDE.md
 AGENTS.md
 
+# Keep project-level agent rules under .devin/
+!.devin/
+!.devin/**/AGENTS.md
+
 # Experimental artifacts
 dev/
 results.tsv

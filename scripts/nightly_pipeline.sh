@@ -38,7 +38,7 @@ PROFILE_TIMEOUT=$(yq -r '.pipeline.phases.profile.timeout_min // 30' "$CONFIG")
 EXTRACT_TOP_K=$(yq -r '.pipeline.phases.extract.top_k // 5' "$CONFIG")
 EXTRACT_BACKEND=$(yq -r '.pipeline.phases.extract.backend // "triton"' "$CONFIG")
 REPORT_DIR=$(yq -r '.pipeline.phases.report.dashboard_dir // "docs"' "$CONFIG")
-CUDA_KERNELS=($(yq -r '.pipeline.phases.cuda_migrate.kernels [] // "matmul"' "$CONFIG"))
+CUDA_KERNELS=($(yq -r '.pipeline.phases.cuda_migrate.kernels[] // "matmul"' "$CONFIG"))
 
 # Read enabled models from config
 MODELS=()
@@ -172,7 +172,7 @@ for k in kernels[:5]:
   echo ""
   echo "[6/8] CUDA migration for $M_NAME..."
   for kt in "${CUDA_KERNELS[@]}"; do
-    if compglob -G "${MODEL_WS}/kernel_${kt}_*optimized*.py" 2>/dev/null ||
+    if find "$MODEL_WS" -maxdepth 1 -name "kernel_${kt}_*optimized*.py" -print -quit 2>/dev/null | grep -q . ||
       [[ -f "${MODEL_WS}/kernel_${kt}_optimized.py" ]]; then
       echo "  Migrating $kt to CUDA..."
       uv run python orchestrate.py --workspace "$MODEL_WS" migrate-cuda \

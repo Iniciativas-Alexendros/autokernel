@@ -10,13 +10,20 @@ Models:
 from __future__ import annotations
 
 import json
+import os
 import re
+import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
 import ollama as ollama_client
+
+try:
+    import aiohttp
+except ImportError:
+    aiohttp = None
 
 from autokernel.nemotron_client import NemotronClient, ReviewResult
 from autokernel.rag_index import RAGIndex
@@ -182,15 +189,74 @@ class LLMAssistant:
         self.rag = RAGIndex(embed_model)
         self._current_model: str | None = None
 
-    def _call_ollama(self, model: str, prompt: str, system: str = "") -> str:
-        """Call Ollama with automatic model loading."""
-        if self._current_model != model:
-            self._switch_model(model)
+    def _read_openrouter_key(self) -> str:
+        """Read OpenRouter API key from env or Proton Pass."""
+        env_key = os.environ.get("OPENROUTER_API_KEY")
+        if env_key:
+            return env_key
+        try:
+            result = subprocess.run(
+                [
+                    "/home/alexendros/.local/bin/pass-cli",
+                    "item",
+                    "view",
+                    "pass://Infraestructura/OpenRouter/APIkey",
+                    "--field",
+                    "APIkey",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=10,
+            )
+            return result.stdout.strip()
+        except Exception:
+            raise RuntimeError(
+                "OPENROUTER_API_KEY not found in environment or Proton Pass"
+            )
 
+    def _call_api(self, model: str, messages: list[dict[str, str]]) -> str:
+        """Call remote API (OpenRouter) for opencode models."""
+        import urllib.request
+
+        api_key = self._read_openrouter_key()
+        payload = json.dumps(
+            {
+                "model": model,
+                "messages": messages,
+                "temperature": 0.1,
+                "max_tokens": 8192,
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/chat/completions",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", errors="ignore")[:500]
+            raise RuntimeError(f"OpenRouter {e.code}: {body}")
+        return data["choices"][0]["message"]["content"]
+
+    def _call_ollama(self, model: str, prompt: str, system: str = "") -> str:
+        """Call Ollama or remote API depending on model prefix."""
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
+
+        if model.startswith("opencode/"):
+            return self._call_api(model, messages)
+
+        if self._current_model != model:
+            self._switch_model(model)
 
         resp = ollama_client.chat(
             model=model, messages=messages, options={"temperature": 0.1}
@@ -257,11 +323,19 @@ class LLMAssistant:
             spec=json.dumps(spec.__dict__, indent=2, default=str),
             kernel_type=spec.kernel_type,
         )
-        return self._call_ollama(
+        raw = self._call_ollama(
             self.coder_model,
             prompt,
-            system="You are a GPU kernel test engineer. Output only Python test code.",
+            system="You are a GPU kernel test engineer. Output only Python test code. No markdown, no code blocks, no explanations.",
         )
+        # Strip markdown code blocks if present
+        code = raw.strip()
+        if code.startswith("```"):
+            first_newline = code.index("\n")
+            code = code[first_newline + 1 :]
+        if code.endswith("```"):
+            code = code[:-3]
+        return code.strip()
 
     def generate_kernel(self, spec: Spec, tests: str) -> str:
         """Generate kernel implementation from spec + tests."""
@@ -270,11 +344,20 @@ class LLMAssistant:
             tests=tests,
             kernel_type=spec.kernel_type,
         )
-        return self._call_ollama(
+        raw = self._call_ollama(
             self.coder_model,
             prompt,
-            system="You are a Triton kernel developer. Output only Python kernel code.",
+            system="You are a Triton kernel developer. Output only Python kernel code. No markdown, no code blocks, no explanations.",
         )
+        # Strip markdown code blocks if present
+        code = raw.strip()
+        if code.startswith("```"):
+            # Remove opening block (```python or ```)
+            first_newline = code.index("\n")
+            code = code[first_newline + 1 :]
+        if code.endswith("```"):
+            code = code[:-3]
+        return code.strip()
 
     # ------------------------------------------------------------------
     # Review (Nemotron API)

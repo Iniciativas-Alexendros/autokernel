@@ -1,9 +1,22 @@
 import pytest
-import requests
+
+pytestmark = [pytest.mark.integration, pytest.mark.slow]
+
+try:
+    import requests
+except ModuleNotFoundError:
+    requests = None
+
 import time
 
 
 OLLAMA_BASE = "http://localhost:11434"
+
+
+@pytest.fixture(autouse=True)
+def _requires_requests():
+    if requests is None:
+        pytest.skip("requests no disponible (instalar con uv sync --extra testing)")
 
 
 class TestOllamaHealth:
